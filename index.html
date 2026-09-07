@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ucalac Gestión</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+  :root{
+    --graphite:#20241f; --graphite-2:#2b3129; --steel:#3d453c;
+    --curd:#f5efdd; --curd-dim:#e7dfc4;
+    --whey:#e8b23c; --whey-dim:#b98a26;
+    --rind:#a8442d; --sage:#71906a; --sage-dim:#4f6a4a;
+    --line:#4a5147;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--graphite); color:var(--curd); font-family:'Inter',sans-serif; min-height:100vh; }
+  .app{ max-width:560px; margin:0 auto; padding-bottom:60px; }
+  header{ padding:16px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--graphite); z-index:10; }
+  header h1{ font-family:'Barlow Condensed',sans-serif; font-size:22px; text-transform:uppercase; margin:0 0 12px; letter-spacing:0.03em; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tab{ background:var(--graphite-2); border:1px solid var(--line); color:var(--curd-dim); padding:8px 12px; border-radius:16px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer; }
+  .tab.active{ background:var(--whey); color:var(--graphite); border-color:var(--whey); }
+  main{ padding:16px; }
+  .card{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px; }
+  .card h3{ font-family:'Barlow Condensed',sans-serif; font-size:15px; text-transform:uppercase; letter-spacing:0.03em; margin:0 0 12px; color:var(--curd-dim); }
+  .card h4{ font-family:'Barlow Condensed',sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:0.03em; margin:14px 0 4px; color:#8b9384; border-top:1px solid var(--line); padding-top:12px; }
+  label{ display:block; font-size:11px; color:var(--curd-dim); text-transform:uppercase; letter-spacing:0.03em; margin:10px 0 4px; font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+  select, input[type=text], input[type=number]{ width:100%; background:var(--graphite); border:1px solid var(--line); color:var(--curd); padding:10px; border-radius:6px; font-size:15px; font-family:'Inter',sans-serif; }
+  input:disabled{ opacity:0.55; }
+  .req{ color:var(--rind); }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  button{ background:var(--whey); color:var(--graphite); border:none; border-radius:8px; padding:12px 18px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; font-size:14px; cursor:pointer; }
+  button.secundario{ background:var(--graphite); border:1px solid var(--whey-dim); color:var(--whey); }
+  button.pausar{ background:var(--rind); color:var(--curd); }
+  button:disabled{ background:var(--steel); color:#7a8074; cursor:default; }
+  .fila-botones{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .tina-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .tina-tile{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:16px; text-align:center; cursor:pointer; }
+  .tina-tile.libre{ border-color:var(--sage); }
+  .tina-tile.ocupada{ border-color:var(--whey-dim); }
+  .tina-tile .id{ font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:700; }
+  .tina-tile .estado{ font-size:11px; text-transform:uppercase; letter-spacing:0.03em; margin-top:4px; }
+  .tina-tile.libre .estado{ color:var(--sage); }
+  .tina-tile.ocupada .estado{ color:var(--whey); }
+  .partida-item{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .partida-top{ display:flex; justify-content:space-between; align-items:center; }
+  .partida-var{ font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:700; text-transform:uppercase; }
+  .partida-sub{ font-size:12px; color:#8b9384; margin-top:2px; }
+  .reloj{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; color:var(--whey); }
+  .estado-badge{ font-size:10px; text-transform:uppercase; padding:3px 8px; border-radius:10px; font-family:'Barlow Condensed',sans-serif; font-weight:700; }
+  .estado-badge.corriendo{ background:rgba(143,209,138,0.15); color:#8fd18a; }
+  .estado-badge.pausado{ background:rgba(224,138,122,0.15); color:#e08a7a; }
+  .gate-form{ background:var(--graphite); border:1px dashed var(--whey-dim); border-radius:8px; padding:12px; margin-top:12px; }
+  .empty{ text-align:center; padding:30px 10px; color:#6f766a; font-size:13px; }
+  .msg-ok{ color:#8fd18a; font-size:13px; margin-top:8px; }
+  .msg-error{ color:#e08a7a; font-size:13px; margin-top:8px; }
+  .recepcion-row{ display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); gap:6px; }
+  .recepcion-row:last-child{ border-bottom:none; }
+  .hint{ font-size:11.5px; color:#8b9384; margin-top:6px; line-height:1.4; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="tituloHeader">Ucalac Gestión</h1>
+    <div class="tabs" id="tabs"></div>
+  </header>
+  <main id="main"><div class="empty">Cargando…</div></main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, signInAnonymously, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, getDoc, getDocs,
+  query, where, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAqlGp6ncqhsokfrz8io5p9hrk27c4M_tA",
+  authDomain: "ucalac-gestion.firebaseapp.com",
+  projectId: "ucalac-gestion",
+  storageBucket: "ucalac-gestion.firebasestorage.app",
+  messagingSenderId: "220065898316",
+  appId: "1:220065898316:web:106d0a5a65875c258239e9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ===== Catálogo de Tambos (hardcodeado — todavía no es una colección de Firestore,
+// son los 6 tambos reales ya documentados en el modelo v0.7) =====
+const TAMBOS = [
+  { id: "T1", nombre: "T1 — Cañada (Barufaldi)" },
+  { id: "T3", nombre: "T3 — El Hornero (Tamagnini)" },
+  { id: "T4", nombre: "T4 — Luresne (Oviedo)" },
+  { id: "T5", nombre: "T5 — El Negro (Lovay)" },
+  { id: "T6", nombre: "T6 — Don Gaspar (Bainotti)" },
+  { id: "T8", nombre: "T8 — Las 2 Fábricas (Sagardía)" }
+];
+
+// Opciones de fermento reales (matriz documentada en el modelo v0.7 / mockup)
+const FERMENTO_OPCIONES = [
+  { id: "opcion3", nombre: "Opción 3 — Chr. Hansen / STI" },
+  { id: "opcion5", nombre: "Opción 5 — Danisco / R704" },
+  { id: "opcion7", nombre: "Opción 7 — DSM / MO" }
+];
+
+// Etapas del camino corto que tienen pantalla propia con lista de partidas
+const ESTACIONES = [
+  { id: "moldeo", nombre: "Moldeo" },
+  { id: "prensado", nombre: "Prensado" },
+  { id: "salado", nombre: "Salado" },
+  { id: "oreo", nombre: "Oreo" },
+  { id: "envasado", nombre: "Envasado" }
+];
+
+let CATALOGOS = { variedades: [], etapas: {}, silos: [], tinas: [] };
+let vista = "recepcion";
+let cacheElaboraciones = {}; // id -> data, para el tick del reloj
+let listenersActivos = [];   // unsubscribes de onSnapshot de la vista actual
+
+function fechaHoyISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function formatearHMS(totalSeg) {
+  totalSeg = Math.max(0, Math.floor(totalSeg));
+  const h = Math.floor(totalSeg/3600), m = Math.floor((totalSeg%3600)/60), s = totalSeg%60;
+  return [h,m,s].map(v=>String(v).padStart(2,"0")).join(":");
+}
+function num(v) {
+  if (v === undefined || v === null) return undefined;
+  const s = String(v).trim().replace(",", ".");
+  if (s === "") return undefined;
+  const n = Number(s);
+  return isNaN(n) ? undefined : n;
+}
+
+// ===== Motor de /elaboraciones (mismo que firebase-elaboraciones.js v3) =====
+
+function calcularSegundosTranscurridos(elaboracion) {
+  const acumulado = elaboracion.segundosAcumulados || 0;
+  if (!elaboracion.enCurso || !elaboracion.etapaActualDesde) return acumulado;
+  const desdeMillis = elaboracion.etapaActualDesde.toMillis ? elaboracion.etapaActualDesde.toMillis() : Date.now();
+  return acumulado + Math.max(0, Math.floor((Date.now() - desdeMillis) / 1000));
+}
+
+async function crearElaboracion({ variedadId, tinaFisica, silo, litros, opcionFermento }) {
+  const fecha = fechaHoyISO();
+  const elaboracionesRef = collection(db, "elaboraciones");
+  const qHoy = query(elaboracionesRef, where("fecha", "==", fecha));
+  const snapHoy = await getDocs(qHoy);
+  const nTinaDia = snapHoy.size + 1;
+  const nTinaVariedad = snapHoy.docs.filter(d => d.data().variedadId === variedadId).length + 1;
+
+  const nueva = {
+    variedadId, tinaFisica, fecha, nTinaDia, nTinaVariedad, silo,
+    litros: litros ?? null,
+    opcionFermento: opcionFermento ?? null,
+    litrosCrema: null, gb: null, humedad: null, caseina: null,
+    etapaActualId: "elaboracion",
+    etapaActualDesde: serverTimestamp(),
+    segundosAcumulados: 0,
+    enCurso: true,
+    creadoEn: serverTimestamp(),
+    actualizadoEn: serverTimestamp()
+  };
+  const ref = await addDoc(elaboracionesRef, nueva);
+  return ref.id;
+}
+
+async function guardarAnalisisElaboracion(id, { litros, litrosCrema, gb, humedad, caseina }) {
+  const datos = { actualizadoEn: serverTimestamp() };
+  if (litros !== undefined) datos.litros = litros;
+  if (litrosCrema !== undefined) datos.litrosCrema = litrosCrema;
+  if (gb !== undefined) datos.gb = gb;
+  if (humedad !== undefined) datos.humedad = humedad;
+  if (caseina !== undefined) datos.caseina = caseina;
+  await updateDoc(doc(db, "elaboraciones", id), datos);
+}
+
+async function pausarEtapa(id) {
+  const refElab = doc(db, "elaboraciones", id);
+  const snap = await getDoc(refElab);
+  const e = snap.data();
+  if (!e.enCurso) return;
+  const total = calcularSegundosTranscurridos(e);
+  await updateDoc(refElab, { segundosAcumulados: total, enCurso: false, actualizadoEn: serverTimestamp() });
+}
+
+async function reanudarEtapa(id) {
+  const refElab = doc(db, "elaboraciones", id);
+  const snap = await getDoc(refElab);
+  if (snap.data().enCurso) return;
+  await updateDoc(refElab, { etapaActualDesde: serverTimestamp(), enCurso: true, actualizadoEn: serverTimestamp() });
+}
+
+function gateCierreDe(etapaId) {
+  return (CATALOGOS.etapas[etapaId] && CATALOGOS.etapas[etapaId].gateCierre) || [];
+}
+
+async function avanzarEtapa(id, datosCierre = {}) {
+  const refElab = doc(db, "elaboraciones", id);
+  const snapElab = await getDoc(refElab);
+  const elaboracion = snapElab.data();
+  const variedadId = elaboracion.variedadId;
+  const etapaActualId = elaboracion.etapaActualId;
+
+  const gateCierre = gateCierreDe(etapaActualId);
+  const resolverValor = (campo) =>
+    datosCierre[campo] !== undefined ? datosCierre[campo] : elaboracion[campo];
+
+  const faltantes = gateCierre
+    .filter(c => c.requerido)
+    .map(c => c.campo)
+    .filter(campo => {
+      const v = resolverValor(campo);
+      return v === undefined || v === null || v === "";
+    });
+  if (faltantes.length > 0) {
+    throw new Error(`Faltan datos: ${faltantes.join(", ")}`);
+  }
+
+  const tiempoEtapaSegundos = calcularSegundosTranscurridos(elaboracion);
+  const datosParaGuardar = {};
+  gateCierre.forEach(c => { datosParaGuardar[c.campo] = resolverValor(c.campo); });
+
+  await addDoc(collection(db, "elaboraciones", id, "cierres"), {
+    etapaId: etapaActualId, datos: datosParaGuardar, tiempoEtapaSegundos, cerradoEn: serverTimestamp()
+  });
+
+  const qSecuencia = query(collection(db, "secuenciasVariedad"), where("variedadId", "==", variedadId));
+  const snapSecuencia = await getDocs(qSecuencia);
+  const secuencia = snapSecuencia.docs.map(d => d.data()).sort((a,b) => a.orden - b.orden);
+  const idxActual = secuencia.findIndex(s => s.etapaId === etapaActualId);
+  const siguiente = secuencia[idxActual + 1];
+
+  if (!siguiente) return { etapaNuevaId: null };
+
+  await updateDoc(refElab, {
+    etapaActualId: siguiente.etapaId,
+    etapaActualDesde: serverTimestamp(),
+    segundosAcumulados: 0,
+    enCurso: true,
+    actualizadoEn: serverTimestamp()
+  });
+  return { etapaNuevaId: siguiente.etapaId };
+}
+
+// ===== Carga de catálogos (una vez al arrancar) =====
+
+async function cargarCatalogos() {
+  const [snapVar, snapEtapas, snapSilos, snapTinas] = await Promise.all([
+    getDocs(collection(db, "variedades")),
+    getDocs(collection(db, "etapas")),
+    getDocs(collection(db, "silos")),
+    getDocs(collection(db, "tinas"))
+  ]);
+  CATALOGOS.variedades = snapVar.docs.map(d => ({ id: d.id, ...d.data() }));
+  snapEtapas.docs.forEach(d => { CATALOGOS.etapas[d.id] = d.data(); });
+  CATALOGOS.silos = snapSilos.docs.map(d => ({ id: d.id, ...d.data() }));
+  CATALOGOS.tinas = snapTinas.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// ===== Auth =====
+
+function asegurarAuth() {
+  return new Promise((resolve, reject) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      unsub();
+      if (user) return resolve(user);
+      signInAnonymously(auth).then(c => resolve(c.user)).catch(reject);
+    }, reject);
+  });
+}
+
+// ===== Navegación =====
+
+function limpiarListeners() {
+  listenersActivos.forEach(unsub => unsub());
+  listenersActivos = [];
+  cacheElaboraciones = {};
+}
+
+function irA(v) {
+  limpiarListeners();
+  vista = v;
+  renderTabs();
+  render();
+}
+
+function renderTabs() {
+  const tabsHtml = [
+    { id: "recepcion", nombre: "Recepción" },
+    { id: "elaboracion", nombre: "Tina" },
+    ...ESTACIONES
+  ].map(t => `<div class="tab ${vista===t.id?'active':''}" onclick="window.irA('${t.id}')">${t.nombre}</div>`).join("");
+  document.getElementById("tabs").innerHTML = tabsHtml;
+}
+window.irA = irA;
+
+function render() {
+  const main = document.getElementById("main");
+  if (vista === "recepcion") return renderRecepcion(main);
+  if (vista === "elaboracion") return renderTinaSelector(main);
+  return renderEstacionGenerica(main, vista);
+}
+
+// ===== Recepción =====
+
+function renderRecepcion(main) {
+  main.innerHTML = `
+    <div class="card">
+      <h3>Registrar recepción de leche</h3>
+
+      <label>Tambo <span class="req">*</span></label>
+      <select id="recTambo">${TAMBOS.map(t=>`<option value="${t.id}">${t.nombre}</option>`).join("")}</select>
+
+      <div class="row2">
+        <div><label>Silo destino <span class="req">*</span></label>
+        <select id="recSilo">${CATALOGOS.silos.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join("")}</select></div>
+        <div><label>Modalidad</label>
+        <select id="recModalidad"><option value="socio">Socio</option><option value="fason">Fasón</option></select></div>
+      </div>
+
+      <label>Litros <span class="req">*</span></label>
+      <input type="number" id="recLitros" placeholder="ej. 5200">
+
+      <h4>Análisis (opcional, tal como venga en el remito)</h4>
+      <div class="row2">
+        <div><label>pH</label><input type="text" id="recPh" placeholder="ej. 6,6"></div>
+        <div><label>Acidez</label><input type="text" id="recAcidez" placeholder="ej. 16"></div>
+      </div>
+      <div class="row2">
+        <div><label>Temperatura (°C)</label><input type="text" id="recTemp" placeholder="ej. 4"></div>
+        <div><label>% MG (grasa)</label><input type="text" id="recMg" placeholder="ej. 3,6"></div>
+      </div>
+      <div class="row2">
+        <div><label>% Proteína</label><input type="text" id="recProt" placeholder="ej. 3,2"></div>
+        <div><label>% SNG</label><input type="text" id="recSng" placeholder="ej. 8,5"></div>
+      </div>
+      <div class="row2">
+        <div><label>% Agua</label><input type="text" id="recAgua" placeholder="ej. 0"></div>
+        <div><label>Inhibidores</label>
+        <select id="recInhibidores"><option value="">—</option><option value="no">No</option><option value="si">Sí</option></select></div>
+      </div>
+      <label>Clostridios</label>
+      <select id="recClostridios"><option value="">—</option><option value="no">No</option><option value="si">Sí</option></select>
+
+      <div class="fila-botones"><button onclick="window.registrarRecepcion()">Registrar recepción</button></div>
+      <div id="recMsg"></div>
+      <div class="hint">Este registro no bloquea ni condiciona el arranque de una elaboración — el silo se elige libremente al iniciar una tina. Los campos de análisis de calidad para liquidación (UREA, PAL, CAS, RCS, RBT) no van acá — se miden en funesil, para el pago al productor.</div>
+    </div>
+    <div class="card">
+      <h3>Recepciones de hoy</h3>
+      <div id="listaRecepciones"><div class="empty">Cargando…</div></div>
+    </div>
+  `;
+
+  const q = query(collection(db, "recepciones"), where("fecha", "==", fechaHoyISO()));
+  const unsub = onSnapshot(q, (snap) => {
+    const cont = document.getElementById("listaRecepciones");
+    if (!cont) return;
+    if (snap.empty) { cont.innerHTML = `<div class="empty">Sin recepciones cargadas hoy.</div>`; return; }
+    const filas = snap.docs.map(d => {
+      const r = d.data();
+      const silo = CATALOGOS.silos.find(s => s.id === r.silo);
+      return `<div class="recepcion-row"><span>${r.tamboNombre}</span><span>${r.modalidad==='fason'?'Fasón':'Socio'}</span><span>${silo ? silo.nombre : r.silo}</span><span>${r.litros} L</span></div>`;
+    }).join("");
+    cont.innerHTML = filas;
+  });
+  listenersActivos.push(unsub);
+}
+
+window.registrarRecepcion = async function () {
+  const tamboId = document.getElementById("recTambo").value;
+  const silo = document.getElementById("recSilo").value;
+  const modalidad = document.getElementById("recModalidad").value;
+  const litros = Number(document.getElementById("recLitros").value);
+  const msg = document.getElementById("recMsg");
+  if (!litros || litros <= 0) {
+    msg.innerHTML = `<div class="msg-error">Cargá los litros recibidos.</div>`;
+    return;
+  }
+  const tambo = TAMBOS.find(t => t.id === tamboId);
+  const analisis = {
+    ph: num(document.getElementById("recPh").value),
+    acidez: num(document.getElementById("recAcidez").value),
+    temperatura: num(document.getElementById("recTemp").value),
+    mg: num(document.getElementById("recMg").value),
+    proteina: num(document.getElementById("recProt").value),
+    sng: num(document.getElementById("recSng").value),
+    agua: num(document.getElementById("recAgua").value),
+    inhibidores: document.getElementById("recInhibidores").value || null,
+    clostridios: document.getElementById("recClostridios").value || null
+  };
+  try {
+    await addDoc(collection(db, "recepciones"), {
+      tamboId, tamboNombre: tambo.nombre, silo, modalidad, litros, analisis,
+      fecha: fechaHoyISO(), creadoEn: serverTimestamp()
+    });
+    msg.innerHTML = `<div class="msg-ok">Recepción registrada.</div>`;
+    document.getElementById("recLitros").value = "";
+  } catch (e) {
+    msg.innerHTML = `<div class="msg-error">Error: ${e.message}</div>`;
+  }
+};
+
+// ===== Tina / Elaboración =====
+
+function renderTinaSelector(main) {
+  main.innerHTML = `<div class="tina-grid" id="tinaGrid"><div class="empty">Cargando…</div></div><div id="tinaDetalle"></div>`;
+
+  const q = query(collection(db, "elaboraciones"), where("etapaActualId", "==", "elaboracion"));
+  const unsub = onSnapshot(q, (snap) => {
+    const ocupadas = {};
+    snap.docs.forEach(d => { ocupadas[d.data().tinaFisica] = { id: d.id, ...d.data() }; cacheElaboraciones[d.id] = d.data(); });
+
+    const tinas = CATALOGOS.tinas.length ? CATALOGOS.tinas.map(t=>t.id) : ["A","B"];
+    const grid = document.getElementById("tinaGrid");
+    if (!grid) return;
+    grid.innerHTML = tinas.map(tid => {
+      const ocupada = ocupadas[tid];
+      if (!ocupada) {
+        return `<div class="tina-tile libre" onclick="window.abrirNuevaElaboracion('${tid}')">
+          <div class="id">${tid}</div><div class="estado">Libre</div></div>`;
+      }
+      const variedad = CATALOGOS.variedades.find(v => v.id === ocupada.variedadId);
+      return `<div class="tina-tile ocupada" onclick="window.abrirDetalleElaboracion('${ocupada.id}')">
+        <div class="id">${tid}</div>
+        <div class="estado">${variedad ? variedad.nombre : ocupada.variedadId}</div>
+        <div class="reloj" id="reloj_${ocupada.id}" style="font-size:16px;">${formatearHMS(calcularSegundosTranscurridos(ocupada))}</div>
+      </div>`;
+    }).join("");
+  });
+  listenersActivos.push(unsub);
+}
+
+window.abrirNuevaElaboracion = function (tinaId) {
+  const det = document.getElementById("tinaDetalle");
+  det.innerHTML = `
+    <div class="card">
+      <h3>Nueva elaboración — Tina ${tinaId}</h3>
+      <label>Variedad <span class="req">*</span></label>
+      <select id="nvVariedad">${CATALOGOS.variedades.map(v=>`<option value="${v.id}">${v.nombre}</option>`).join("")}</select>
+      <div class="row2">
+        <div><label>Silo <span class="req">*</span></label>
+        <select id="nvSilo">${CATALOGOS.silos.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join("")}</select></div>
+        <div><label>Opción de fermento</label>
+        <select id="nvFermento">${FERMENTO_OPCIONES.map(f=>`<option value="${f.id}">${f.nombre}</option>`).join("")}</select></div>
+      </div>
+      <label>Litros (referencia, editable después)</label>
+      <input type="number" id="nvLitros" placeholder="ej. 9800">
+      <div class="fila-botones">
+        <button onclick="window.confirmarNuevaElaboracion('${tinaId}')">Iniciar elaboración</button>
+        <button class="secundario" onclick="document.getElementById('tinaDetalle').innerHTML=''">Cancelar</button>
+      </div>
+      <div id="nvMsg"></div>
+    </div>`;
+};
+
+window.confirmarNuevaElaboracion = async function (tinaId) {
+  const variedadId = document.getElementById("nvVariedad").value;
+  const silo = document.getElementById("nvSilo").value;
+  const opcionFermento = document.getElementById("nvFermento").value;
+  const litrosVal = document.getElementById("nvLitros").value;
+  const msg = document.getElementById("nvMsg");
+  try {
+    await crearElaboracion({ variedadId, tinaFisica: tinaId, silo, opcionFermento, litros: litrosVal ? Number(litrosVal) : null });
+    document.getElementById("tinaDetalle").innerHTML = `<div class="msg-ok">Elaboración iniciada en Tina ${tinaId}.</div>`;
+  } catch (e) {
+    msg.innerHTML = `<div class="msg-error">${e.message}</div>`;
+  }
+};
+
+window.abrirDetalleElaboracion = function (id) {
+  const det = document.getElementById("tinaDetalle");
+  const pintar = () => {
+    const e = cacheElaboraciones[id];
+    if (!e) { det.innerHTML = ""; return; }
+    const variedad = CATALOGOS.variedades.find(v => v.id === e.variedadId);
+    const fermento = FERMENTO_OPCIONES.find(f => f.id === e.opcionFermento);
+    det.innerHTML = `
+      <div class="card">
+        <div class="partida-top">
+          <div><div class="partida-var">${variedad ? variedad.nombre : e.variedadId}</div>
+          <div class="partida-sub">Tina ${e.tinaFisica} · N°${e.nTinaVariedad}${fermento?' · '+fermento.nombre:''}</div></div>
+          <span class="estado-badge ${e.enCurso?'corriendo':'pausado'}">${e.enCurso?'corriendo':'pausado'}</span>
+        </div>
+        <div class="reloj" id="reloj_${id}" style="margin-top:10px;">${formatearHMS(calcularSegundosTranscurridos(e))}</div>
+        <div class="fila-botones">
+          <button class="pausar" onclick="window.accionPausar('${id}')">⏸ Pausar</button>
+          <button class="secundario" onclick="window.accionReanudar('${id}')">▶ Reanudar</button>
+        </div>
+
+        <h4>Análisis de tina (editable durante toda la elaboración)</h4>
+        <div class="row2">
+          <div><label>Litros</label><input type="text" id="anLitros_${id}" value="${e.litros ?? ''}"></div>
+          <div><label>Lts. crema</label><input type="text" id="anCrema_${id}" value="${e.litrosCrema ?? ''}"></div>
+        </div>
+        <div class="row2">
+          <div><label>% GB</label><input type="text" id="anGb_${id}" value="${e.gb ?? ''}"></div>
+          <div><label>% Humedad</label><input type="text" id="anHumedad_${id}" value="${e.humedad ?? ''}"></div>
+        </div>
+        <label>Caseína</label>
+        <input type="text" id="anCaseina_${id}" value="${e.caseina ?? ''}">
+        <div class="fila-botones"><button class="secundario" onclick="window.guardarAnalisis('${id}')">Guardar análisis</button></div>
+        <div id="anMsg_${id}"></div>
+
+        <div class="fila-botones">
+          <button onclick="window.abrirGate('${id}','elaboracion','gateDetalle_${id}')">Cerrar y enviar a moldeo</button>
+        </div>
+        <div id="gateDetalle_${id}"></div>
+      </div>`;
+  };
+  pintar();
+  const unsub = onSnapshot(doc(db, "elaboraciones", id), (snap) => {
+    if (!snap.exists()) { det.innerHTML = `<div class="msg-ok">Partida movida a la siguiente etapa.</div>`; return; }
+    cacheElaboraciones[id] = snap.data();
+    const gateAbierto = document.getElementById(`gateDetalle_${id}`);
+    // no repintar si el usuario está escribiendo en el formulario de análisis o el gate está abierto
+    const enfocado = document.activeElement && document.activeElement.id && document.activeElement.id.startsWith(`an`);
+    if ((!gateAbierto || gateAbierto.innerHTML === "") && !enfocado) pintar();
+  });
+  listenersActivos.push(unsub);
+};
+
+window.guardarAnalisis = async function (id) {
+  const msg = document.getElementById(`anMsg_${id}`);
+  try {
+    await guardarAnalisisElaboracion(id, {
+      litros: num(document.getElementById(`anLitros_${id}`).value),
+      litrosCrema: num(document.getElementById(`anCrema_${id}`).value),
+      gb: num(document.getElementById(`anGb_${id}`).value),
+      humedad: num(document.getElementById(`anHumedad_${id}`).value),
+      caseina: num(document.getElementById(`anCaseina_${id}`).value)
+    });
+    msg.innerHTML = `<div class="msg-ok">Análisis guardado.</div>`;
+  } catch (e) {
+    msg.innerHTML = `<div class="msg-error">${e.message}</div>`;
+  }
+};
+
+// ===== Estaciones genéricas: Moldeo / Prensado / Salado / Oreo / Envasado =====
+
+function renderEstacionGenerica(main, etapaId) {
+  const nombre = (ESTACIONES.find(e=>e.id===etapaId)||{}).nombre || etapaId;
+  main.innerHTML = `<div id="listaEstacion"><div class="empty">Cargando…</div></div>`;
+
+  const q = query(collection(db, "elaboraciones"), where("etapaActualId", "==", etapaId));
+  const unsub = onSnapshot(q, (snap) => {
+    const cont = document.getElementById("listaEstacion");
+    if (!cont) return;
+    if (snap.empty) {
+      cont.innerHTML = `<div class="empty">No hay partidas en ${nombre.toLowerCase()} ahora mismo.</div>`;
+      return;
+    }
+    snap.docs.forEach(d => { cacheElaboraciones[d.id] = d.data(); });
+
+    cont.innerHTML = snap.docs.map(d => {
+      const e = d.data();
+      const variedad = CATALOGOS.variedades.find(v => v.id === e.variedadId);
+      return `
+        <div class="partida-item">
+          <div class="partida-top">
+            <div><div class="partida-var">${variedad ? variedad.nombre : e.variedadId}</div>
+            <div class="partida-sub">Tina ${e.tinaFisica} · N°${e.nTinaVariedad}</div></div>
+            <span class="estado-badge ${e.enCurso?'corriendo':'pausado'}">${e.enCurso?'corriendo':'pausado'}</span>
+          </div>
+          <div class="reloj" id="reloj_${d.id}">${formatearHMS(calcularSegundosTranscurridos(e))}</div>
+          <div class="fila-botones">
+            <button class="pausar" onclick="window.accionPausar('${d.id}')">⏸ Pausar</button>
+            <button class="secundario" onclick="window.accionReanudar('${d.id}')">▶ Reanudar</button>
+            <button onclick="window.abrirGate('${d.id}','${etapaId}','gate_${d.id}')">Cerrar etapa</button>
+          </div>
+          <div id="gate_${d.id}"></div>
+        </div>`;
+    }).join("");
+  });
+  listenersActivos.push(unsub);
+}
+
+// ===== Acciones compartidas: pausar/reanudar/gate =====
+
+window.accionPausar = async function (id) { await pausarEtapa(id); };
+window.accionReanudar = async function (id) { await reanudarEtapa(id); };
+
+window.abrirGate = function (id, etapaId, contenedorId) {
+  const cont = document.getElementById(contenedorId);
+  if (!cont) return;
+  if (cont.innerHTML !== "") { cont.innerHTML = ""; return; } // toggle
+
+  let gateCierre = gateCierreDe(etapaId);
+  const elaboracion = cacheElaboraciones[id] || {};
+
+  // Robustez: el campo "silo" de la etapa "elaboracion" siempre se muestra
+  // de solo lectura (ya se eligió al arrancar la partida), aunque el catálogo
+  // en Firestore todavía no tenga aplicado el fix de tipo "solo_lectura".
+  gateCierre = gateCierre.map(c => {
+    if (etapaId === "elaboracion" && c.campo === "silo") return { ...c, tipo: "solo_lectura" };
+    return c;
+  });
+
+  if (gateCierre.length === 0) {
+    cont.innerHTML = `<div class="gate-form">Sin datos de cierre definidos para esta etapa todavía.
+      <div class="fila-botones"><button onclick="window.confirmarGate('${id}','${etapaId}','${contenedorId}',{})">Avanzar</button></div></div>`;
+    return;
+  }
+
+  const camposHtml = gateCierre.map(c => {
+    if (c.tipo === "solo_lectura") {
+      const valor = elaboracion[c.campo] ?? "(sin valor)";
+      const silo = CATALOGOS.silos.find(s=>s.id===valor);
+      return `<label>${c.label}</label><input type="text" value="${silo?silo.nombre:valor}" disabled>`;
+    }
+    return `<label>${c.label}${c.requerido?'<span class="req"> *</span>':''}</label>
+      <input type="text" id="gc_${id}_${c.campo}" placeholder="${c.tipo}">`;
+  }).join("");
+
+  cont.innerHTML = `
+    <div class="gate-form">
+      <b>Datos de cierre</b>
+      ${camposHtml}
+      <div class="fila-botones">
+        <button onclick="window.leerYConfirmarGate('${id}','${etapaId}','${contenedorId}')">Confirmar y avanzar</button>
+      </div>
+      <div id="gateMsg_${id}"></div>
+    </div>`;
+};
+
+window.leerYConfirmarGate = async function (id, etapaId, contenedorId) {
+  const gateCierre = gateCierreDe(etapaId);
+  const datos = {};
+  gateCierre.forEach(c => {
+    if (c.tipo === "solo_lectura") return;
+    const input = document.getElementById(`gc_${id}_${c.campo}`);
+    if (!input) return;
+    let v = input.value.trim();
+    if (v !== "" && (c.tipo === "int" || c.tipo === "dec")) v = v.replace(",", ".");
+    if (v !== "") datos[c.campo] = v;
+  });
+  await window.confirmarGate(id, etapaId, contenedorId, datos);
+};
+
+window.confirmarGate = async function (id, etapaId, contenedorId, datos) {
+  try {
+    await avanzarEtapa(id, datos);
+    const cont = document.getElementById(contenedorId);
+    if (cont) cont.innerHTML = `<div class="msg-ok">Etapa cerrada, partida avanzó.</div>`;
+  } catch (e) {
+    const msgEl = document.getElementById(`gateMsg_${id}`);
+    if (msgEl) msgEl.innerHTML = `<div class="msg-error">${e.message}</div>`;
+    else alert(e.message);
+  }
+};
+
+// ===== Tick global del reloj (actualiza todos los spans visibles cada segundo) =====
+
+setInterval(() => {
+  Object.keys(cacheElaboraciones).forEach(id => {
+    const el = document.getElementById(`reloj_${id}`);
+    if (!el) return;
+    el.textContent = formatearHMS(calcularSegundosTranscurridos(cacheElaboraciones[id]));
+  });
+}, 1000);
+
+// ===== Arranque =====
+
+(async function iniciar() {
+  await asegurarAuth();
+  await cargarCatalogos();
+  renderTabs();
+  render();
+})();
+</script>
+</body>
+</html>
