@@ -442,8 +442,13 @@ function renderRecepcion(main) {
 function pintarEntregas() {
   const cont = document.getElementById("entregasCont");
   if (!cont) return;
-  cont.innerHTML = entregasRecepcion.map((e, i) => `
-    <div class="card">
+  cont.innerHTML = entregasRecepcion.map((e, i) => htmlEntregaCard(e, i)).join("");
+}
+
+function htmlEntregaCard(e, i) {
+  const val = (v) => (v === undefined || v === null) ? "" : String(v);
+  return `
+    <div class="card" data-entrega="${i}">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <h3 style="margin:0;">Tambo ${i+1}</h3>
         ${entregasRecepcion.length > 1 ? `<button class="btn-chico pausar" onclick="window.quitarEntrega(${i})">Quitar</button>` : ''}
@@ -453,31 +458,31 @@ function pintarEntregas() {
         ${TAMBOS.map(t=>`<option value="${t.id}" ${e.tamboId===t.id?'selected':''}>${t.nombre}</option>`).join("")}
       </select>
       <div class="row2">
-        <div><label>Ticket / remito</label><input type="text" value="${e.ticket}" oninput="window.setEntrega(${i},'ticket',this.value)" placeholder="N° ticket"></div>
+        <div><label>Ticket / remito</label><input type="text" value="${val(e.ticket)}" oninput="window.setEntrega(${i},'ticket',this.value)" placeholder="N° ticket"></div>
         <div><label>Silo destino <span class="req">*</span></label>
         <select onchange="window.setEntrega(${i},'silo',this.value)">
           ${CATALOGOS.silos.map(s=>`<option value="${s.id}" ${e.silo===s.id?'selected':''}>${s.nombre}</option>`).join("")}
         </select></div>
       </div>
       <div class="row2">
-        <div><label>Litros socio</label><input type="number" value="${e.litrosSocio}" oninput="window.setEntregaLitros(${i},'litrosSocio',this.value)" placeholder="ej. 5200"></div>
-        <div><label>Litros fasón</label><input type="number" value="${e.litrosFason}" oninput="window.setEntregaLitros(${i},'litrosFason',this.value)" placeholder="ej. 0"></div>
+        <div><label>Litros socio</label><input type="text" inputmode="numeric" value="${val(e.litrosSocio)}" oninput="window.setEntregaLitros(${i},'litrosSocio',this.value)" placeholder="ej. 5200"></div>
+        <div><label>Litros fasón</label><input type="text" inputmode="numeric" value="${val(e.litrosFason)}" oninput="window.setEntregaLitros(${i},'litrosFason',this.value)" placeholder="ej. 0"></div>
       </div>
       <h4>Análisis (opcional, tal como venga en el remito)</h4>
       <div class="row2">
-        <div><label>pH</label><input type="text" value="${e.ph}" oninput="window.setEntrega(${i},'ph',this.value)" placeholder="6,6"></div>
-        <div><label>Acidez</label><input type="text" value="${e.acidez}" oninput="window.setEntrega(${i},'acidez',this.value)" placeholder="16"></div>
+        <div><label>pH</label><input type="text" value="${val(e.ph)}" oninput="window.setEntrega(${i},'ph',this.value)" placeholder="6,6"></div>
+        <div><label>Acidez</label><input type="text" value="${val(e.acidez)}" oninput="window.setEntrega(${i},'acidez',this.value)" placeholder="16"></div>
       </div>
       <div class="row2">
-        <div><label>Temp. (°C)</label><input type="text" value="${e.temp}" oninput="window.setEntrega(${i},'temp',this.value)" placeholder="4"></div>
-        <div><label>% MG</label><input type="text" value="${e.mg}" oninput="window.setEntrega(${i},'mg',this.value)" placeholder="3,6"></div>
+        <div><label>Temp. (°C)</label><input type="text" value="${val(e.temp)}" oninput="window.setEntrega(${i},'temp',this.value)" placeholder="4"></div>
+        <div><label>% MG</label><input type="text" value="${val(e.mg)}" oninput="window.setEntrega(${i},'mg',this.value)" placeholder="3,6"></div>
       </div>
       <div class="row2">
-        <div><label>% Proteína</label><input type="text" value="${e.proteina}" oninput="window.setEntrega(${i},'proteina',this.value)" placeholder="3,2"></div>
-        <div><label>% SNG</label><input type="text" value="${e.sng}" oninput="window.setEntrega(${i},'sng',this.value)" placeholder="8,5"></div>
+        <div><label>% Proteína</label><input type="text" value="${val(e.proteina)}" oninput="window.setEntrega(${i},'proteina',this.value)" placeholder="3,2"></div>
+        <div><label>% SNG</label><input type="text" value="${val(e.sng)}" oninput="window.setEntrega(${i},'sng',this.value)" placeholder="8,5"></div>
       </div>
       <div class="row2">
-        <div><label>% Agua</label><input type="text" value="${e.agua}" oninput="window.setEntrega(${i},'agua',this.value)" placeholder="0"></div>
+        <div><label>% Agua</label><input type="text" value="${val(e.agua)}" oninput="window.setEntrega(${i},'agua',this.value)" placeholder="0"></div>
         <div><label>Inhibidores</label>
         <select onchange="window.setEntrega(${i},'inhibidores',this.value)">
           <option value="" ${!e.inhibidores?'selected':''}>—</option>
@@ -492,7 +497,7 @@ function pintarEntregas() {
         <option value="si" ${e.clostridios==='si'?'selected':''}>Sí</option>
       </select>
     </div>
-  `).join("");
+  `;
 }
 
 function pintarTotalRecepcion() {
@@ -514,11 +519,20 @@ window.setEntregaLitros = function (i, campo, valor) {
 };
 
 window.agregarEntrega = function () {
-  // capturar supervisor/obs antes de repintar
-  const sup = document.getElementById("recSupervisor"); if (sup) recepSupervisor = sup.value;
-  const obs = document.getElementById("recObs"); if (obs) recepObservaciones = obs.value;
   entregasRecepcion.push(nuevaEntregaVacia());
-  pintarEntregas();
+  const cont = document.getElementById("entregasCont");
+  if (cont) {
+    // Añadir SOLO la tarjeta nueva al final, sin regenerar las anteriores
+    // (así no se pierde lo ya tipeado en los tambos previos).
+    const i = entregasRecepcion.length - 1;
+    cont.insertAdjacentHTML("beforeend", htmlEntregaCard(entregasRecepcion[i], i));
+    // La primera tarjeta ahora tiene que mostrar su botón "Quitar" (antes estaba
+    // sola y no lo tenía): si pasó de 1 a 2, repintamos solo esa primera.
+    if (entregasRecepcion.length === 2) {
+      const primera = cont.querySelector('[data-entrega="0"]');
+      if (primera) primera.outerHTML = htmlEntregaCard(entregasRecepcion[0], 0);
+    }
+  }
   pintarTotalRecepcion();
 };
 
@@ -539,13 +553,16 @@ window.registrarRecepcion = async function () {
 
   const entregas = entregasRecepcion.map(e => {
     const tambo = TAMBOS.find(x => x.id === e.tamboId);
+    // Firestore no acepta undefined: num() puede devolver undefined en campos
+    // vacíos, así que lo convertimos a null con `?? null`.
     return {
       tamboId: e.tamboId, tamboNombre: tambo ? tambo.nombre : e.tamboId,
-      ticket: e.ticket || null, silo: e.silo,
+      ticket: e.ticket || null, silo: e.silo || null,
       litrosSocio: num(e.litrosSocio) || 0, litrosFason: num(e.litrosFason) || 0,
       analisis: {
-        ph: num(e.ph), acidez: num(e.acidez), temperatura: num(e.temp), mg: num(e.mg),
-        proteina: num(e.proteina), sng: num(e.sng), agua: num(e.agua),
+        ph: num(e.ph) ?? null, acidez: num(e.acidez) ?? null, temperatura: num(e.temp) ?? null,
+        mg: num(e.mg) ?? null, proteina: num(e.proteina) ?? null, sng: num(e.sng) ?? null,
+        agua: num(e.agua) ?? null,
         inhibidores: e.inhibidores || null, clostridios: e.clostridios || null
       }
     };
