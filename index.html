@@ -113,6 +113,39 @@
   .msg-error{ color:#e08a7a; font-size:13px; margin-top:8px; }
   .recepcion-row{ display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line); gap:6px; }
   .recepcion-row:last-child{ border-bottom:none; }
+
+  /* ---- Grilla de recepción por tambo (estética del mockup, inputs nativos) ---- */
+  .tambo-card{ background:var(--graphite); border:1px solid var(--line); border-radius:9px; padding:12px; margin-bottom:10px; }
+  .tambo-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px; }
+  .tambo-title{ font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--whey); }
+  .tambo-del{ background:none; border:1px solid var(--rind); color:#e0a89b; cursor:pointer; padding:4px 10px; border-radius:6px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:11px; -webkit-tap-highlight-color:transparent; }
+  /* selector de tambo grande, se abre tocando cualquier parte */
+  .tambo-select{ width:100%; background:var(--graphite-2); border:1px solid var(--line); color:var(--whey); padding:14px 12px; border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:10px; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b98a26' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+
+  /* fila de litros socio / fasón / total */
+  .litros-row{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:10px; }
+  .litros-cell{ background:var(--graphite-2); border:1px solid var(--line); border-radius:7px; padding:8px 9px; display:flex; flex-direction:column; gap:3px; }
+  .litros-cell.total{ background:rgba(232,178,60,0.1); border-color:var(--whey-dim); justify-content:center; }
+  .litros-lbl{ font-size:10.5px; color:#9aa290; text-transform:uppercase; letter-spacing:0.03em; font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+  .litros-input{ width:100%; background:none; border:none; color:var(--curd); font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:700; padding:0; font-variant-numeric:tabular-nums; }
+  .litros-input:focus{ outline:none; }
+  .litros-val{ font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:700; color:var(--whey); font-variant-numeric:tabular-nums; }
+
+  /* grilla de análisis 3 columnas */
+  .tambo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+  .tambo-cell{ background:var(--graphite-2); border:1px solid var(--line); border-radius:7px; padding:8px 9px; display:flex; flex-direction:column; gap:3px; }
+  .tambo-cell:focus-within{ border-color:var(--whey); }
+  .tambo-cell-lbl{ font-size:10.5px; color:#9aa290; text-transform:uppercase; letter-spacing:0.03em; font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+  .tambo-cell-input{ width:100%; background:none; border:none; color:var(--curd); font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:600; padding:0; font-variant-numeric:tabular-nums; }
+  .tambo-cell-input:focus{ outline:none; }
+  .tambo-cell select.tambo-cell-input{ -webkit-appearance:none; appearance:none; cursor:pointer; }
+
+  /* total general del recibo */
+  .recep-total{ display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:8px; }
+  .recep-total-cell{ display:flex; flex-direction:column; gap:3px; }
+  .recep-total-lbl{ font-size:10px; color:#8b9384; text-transform:uppercase; letter-spacing:0.03em; font-family:'Barlow Condensed',sans-serif; font-weight:600; }
+  .recep-total-val{ font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--curd-dim); font-variant-numeric:tabular-nums; }
+  .recep-total-cell.big .recep-total-val{ font-size:20px; color:var(--whey); }
   .hint{ font-size:11.5px; color:#8b9384; margin-top:6px; line-height:1.4; }
 </style>
 </head>
@@ -447,57 +480,70 @@ function pintarEntregas() {
 
 function htmlEntregaCard(e, i) {
   const val = (v) => (v === undefined || v === null) ? "" : String(v);
+  const tamboSel = TAMBOS.find(t => t.id === e.tamboId);
+  const titulo = tamboSel ? tamboSel.nombre : `Tambo ${i+1}`;
+
+  // Celda de análisis con input nativo. tipo: "dec" (decimal), "int" (entero),
+  // "txt" (texto). inputmode dispara el teclado correcto del sistema.
+  const celda = (campo, lbl, tipo) => {
+    const im = tipo === "int" ? 'inputmode="numeric"' : (tipo === "dec" ? 'inputmode="decimal"' : '');
+    return `<div class="tambo-cell">
+      <span class="tambo-cell-lbl">${lbl}</span>
+      <input class="tambo-cell-input" type="text" ${im} value="${val(e[campo])}" placeholder="—" oninput="window.setEntrega(${i},'${campo}',this.value)">
+    </div>`;
+  };
+  const celdaSelect = (campo, lbl, opciones) => {
+    return `<div class="tambo-cell">
+      <span class="tambo-cell-lbl">${lbl}</span>
+      <select class="tambo-cell-input" onchange="window.setEntrega(${i},'${campo}',this.value)">
+        ${opciones.map(o => `<option value="${o.v}" ${e[campo]===o.v?'selected':''}>${o.t}</option>`).join("")}
+      </select>
+    </div>`;
+  };
+
+  const totalT = (num(e.litrosSocio)||0) + (num(e.litrosFason)||0);
+  const totalStr = totalT ? totalT.toLocaleString('es-AR') + ' L' : '—';
+
   return `
-    <div class="card" data-entrega="${i}">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0;">Tambo ${i+1}</h3>
-        ${entregasRecepcion.length > 1 ? `<button class="btn-chico pausar" onclick="window.quitarEntrega(${i})">Quitar</button>` : ''}
+    <div class="tambo-card" data-entrega="${i}">
+      <div class="tambo-head">
+        <span class="tambo-title" id="tituloEntrega_${i}">${titulo}</span>
+        ${entregasRecepcion.length > 1 ? `<button class="tambo-del" onclick="window.quitarEntrega(${i})">Quitar</button>` : ''}
       </div>
-      <label>Tambo <span class="req">*</span></label>
-      <select onchange="window.setEntrega(${i},'tamboId',this.value)">
+
+      <select class="tambo-select" onchange="window.setTamboEntrega(${i},this.value)">
         ${TAMBOS.map(t=>`<option value="${t.id}" ${e.tamboId===t.id?'selected':''}>${t.nombre}</option>`).join("")}
       </select>
-      <div class="row2">
-        <div><label>Ticket / remito</label><input type="text" value="${val(e.ticket)}" oninput="window.setEntrega(${i},'ticket',this.value)" placeholder="N° ticket"></div>
-        <div><label>Silo destino <span class="req">*</span></label>
-        <select onchange="window.setEntrega(${i},'silo',this.value)">
-          ${CATALOGOS.silos.map(s=>`<option value="${s.id}" ${e.silo===s.id?'selected':''}>${s.nombre}</option>`).join("")}
-        </select></div>
+
+      <div class="litros-row">
+        <div class="litros-cell">
+          <span class="litros-lbl">Socio</span>
+          <input class="litros-input" type="text" inputmode="numeric" value="${val(e.litrosSocio)}" placeholder="0" oninput="window.setEntregaLitros(${i},'litrosSocio',this.value)">
+        </div>
+        <div class="litros-cell">
+          <span class="litros-lbl">Fasón</span>
+          <input class="litros-input" type="text" inputmode="numeric" value="${val(e.litrosFason)}" placeholder="0" oninput="window.setEntregaLitros(${i},'litrosFason',this.value)">
+        </div>
+        <div class="litros-cell total">
+          <span class="litros-lbl">Total tambo</span>
+          <span class="litros-val" id="totalTambo_${i}">${totalStr}</span>
+        </div>
       </div>
-      <div class="row2">
-        <div><label>Litros socio</label><input type="text" inputmode="numeric" value="${val(e.litrosSocio)}" oninput="window.setEntregaLitros(${i},'litrosSocio',this.value)" placeholder="ej. 5200"></div>
-        <div><label>Litros fasón</label><input type="text" inputmode="numeric" value="${val(e.litrosFason)}" oninput="window.setEntregaLitros(${i},'litrosFason',this.value)" placeholder="ej. 0"></div>
+
+      <div class="tambo-grid">
+        ${celda('ticket','Ticket','txt')}
+        ${celda('ph','pH','dec')}
+        ${celda('acidez','Acidez','dec')}
+        ${celda('temp','Temp.','dec')}
+        ${celda('mg','% MG','dec')}
+        ${celda('proteina','% Prot','dec')}
+        ${celda('sng','% SNG','dec')}
+        ${celda('agua','% Agua','dec')}
+        ${celdaSelect('inhibidores','Inhib.',[{v:'',t:'—'},{v:'no',t:'No'},{v:'si',t:'Sí'}])}
+        ${celdaSelect('clostridios','Clostr.',[{v:'',t:'—'},{v:'no',t:'No'},{v:'si',t:'Sí'}])}
+        ${celdaSelect('silo','Silo', [{v:'',t:'—'}].concat(CATALOGOS.silos.map(s=>({v:s.id,t:s.nombre}))))}
       </div>
-      <h4>Análisis (opcional, tal como venga en el remito)</h4>
-      <div class="row2">
-        <div><label>pH</label><input type="text" value="${val(e.ph)}" oninput="window.setEntrega(${i},'ph',this.value)" placeholder="6,6"></div>
-        <div><label>Acidez</label><input type="text" value="${val(e.acidez)}" oninput="window.setEntrega(${i},'acidez',this.value)" placeholder="16"></div>
-      </div>
-      <div class="row2">
-        <div><label>Temp. (°C)</label><input type="text" value="${val(e.temp)}" oninput="window.setEntrega(${i},'temp',this.value)" placeholder="4"></div>
-        <div><label>% MG</label><input type="text" value="${val(e.mg)}" oninput="window.setEntrega(${i},'mg',this.value)" placeholder="3,6"></div>
-      </div>
-      <div class="row2">
-        <div><label>% Proteína</label><input type="text" value="${val(e.proteina)}" oninput="window.setEntrega(${i},'proteina',this.value)" placeholder="3,2"></div>
-        <div><label>% SNG</label><input type="text" value="${val(e.sng)}" oninput="window.setEntrega(${i},'sng',this.value)" placeholder="8,5"></div>
-      </div>
-      <div class="row2">
-        <div><label>% Agua</label><input type="text" value="${val(e.agua)}" oninput="window.setEntrega(${i},'agua',this.value)" placeholder="0"></div>
-        <div><label>Inhibidores</label>
-        <select onchange="window.setEntrega(${i},'inhibidores',this.value)">
-          <option value="" ${!e.inhibidores?'selected':''}>—</option>
-          <option value="no" ${e.inhibidores==='no'?'selected':''}>No</option>
-          <option value="si" ${e.inhibidores==='si'?'selected':''}>Sí</option>
-        </select></div>
-      </div>
-      <label>Clostridios</label>
-      <select onchange="window.setEntrega(${i},'clostridios',this.value)">
-        <option value="" ${!e.clostridios?'selected':''}>—</option>
-        <option value="no" ${e.clostridios==='no'?'selected':''}>No</option>
-        <option value="si" ${e.clostridios==='si'?'selected':''}>Sí</option>
-      </select>
-    </div>
-  `;
+    </div>`;
 }
 
 function pintarTotalRecepcion() {
@@ -506,16 +552,30 @@ function pintarTotalRecepcion() {
   const t = totalesRecepcion();
   card.innerHTML = `
     <h3>Total del recibo</h3>
-    <div class="recepcion-row"><span>Socio</span><span><b>${t.socio.toLocaleString('es-AR')} L</b></span></div>
-    <div class="recepcion-row"><span>Fasón</span><span><b>${t.fason.toLocaleString('es-AR')} L</b></span></div>
-    <div class="recepcion-row"><span>Total general</span><span style="color:var(--whey);"><b>${t.total.toLocaleString('es-AR')} L</b></span></div>`;
+    <div class="recep-total">
+      <div class="recep-total-cell"><span class="recep-total-lbl">Socio</span><span class="recep-total-val">${t.socio.toLocaleString('es-AR')} L</span></div>
+      <div class="recep-total-cell"><span class="recep-total-lbl">Fasón</span><span class="recep-total-val">${t.fason.toLocaleString('es-AR')} L</span></div>
+      <div class="recep-total-cell big"><span class="recep-total-lbl">Total recibido</span><span class="recep-total-val">${t.total.toLocaleString('es-AR')} L</span></div>
+    </div>
+    <div class="hint" style="margin-top:8px;">El total recibido es la base para la liquidación del flete (por litro transportado) — se define más adelante.</div>`;
 }
 
 // Setters: guardan en memoria sin repintar (para no perder el foco mientras se tipea)
 window.setEntrega = function (i, campo, valor) { entregasRecepcion[i][campo] = valor; };
+window.setTamboEntrega = function (i, valor) {
+  entregasRecepcion[i].tamboId = valor;
+  const tambo = TAMBOS.find(t => t.id === valor);
+  const titEl = document.getElementById(`tituloEntrega_${i}`);
+  if (titEl && tambo) titEl.textContent = tambo.nombre; // actualiza el título en vivo
+};
 window.setEntregaLitros = function (i, campo, valor) {
   entregasRecepcion[i][campo] = valor;
-  pintarTotalRecepcion(); // el total sí se actualiza en vivo, no tiene inputs que pierdan foco
+  // actualizar el total de ESTE tambo (celda) sin repintar el input activo
+  const e = entregasRecepcion[i];
+  const totalT = (num(e.litrosSocio)||0) + (num(e.litrosFason)||0);
+  const cel = document.getElementById(`totalTambo_${i}`);
+  if (cel) cel.textContent = totalT ? totalT.toLocaleString('es-AR') + ' L' : '—';
+  pintarTotalRecepcion(); // total general del recibo
 };
 
 window.agregarEntrega = function () {
