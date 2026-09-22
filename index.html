@@ -204,7 +204,7 @@ const ESTACIONES = [
   { id: "envasado", nombre: "Envasado" }
 ];
 
-let CATALOGOS = { variedades: [], etapas: {}, silos: [], tinas: [] };
+let CATALOGOS = { variedades: [], etapas: {}, silos: [], tinas: [], empresas: [], choferes: [] };
 
 // ===== Estado de navegación =====
 let vista = "recepcion";        // recepcion | elaboracion | moldeo | prensado | salado | oreo | envasado
@@ -331,6 +331,18 @@ async function cargarCatalogos() {
   snapEtapas.docs.forEach(d => { CATALOGOS.etapas[d.id] = d.data(); });
   CATALOGOS.silos = snapSilos.docs.map(d => ({ id: d.id, ...d.data() }));
   CATALOGOS.tinas = snapTinas.docs.map(d => ({ id: d.id, ...d.data() }));
+  await cargarEmpresasYChoferes();
+}
+
+async function cargarEmpresasYChoferes() {
+  const [snapEmp, snapChof] = await Promise.all([
+    getDocs(collection(db, "empresasTransporte")),
+    getDocs(collection(db, "choferes"))
+  ]);
+  CATALOGOS.empresas = snapEmp.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a,b) => (a.nombre||"").localeCompare(b.nombre||""));
+  CATALOGOS.choferes = snapChof.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a,b) => (a.nombre||"").localeCompare(b.nombre||""));
 }
 
 function asegurarAuth() {
@@ -362,8 +374,14 @@ function renderTabs() {
   const items = [{ id:"recepcion", nombre:"Recep." }, { id:"elaboracion", nombre:"Elab." },
     { id:"moldeo", nombre:"Moldeo" }, { id:"prensado", nombre:"Prens." },
     { id:"salado", nombre:"Salado" }, { id:"oreo", nombre:"Oreo" }, { id:"envasado", nombre:"Envas." }];
-  const idxActual = items.findIndex(t => t.id === vista);
-  const pct = items.length > 1 ? (idxActual / (items.length - 1)) * 100 : 0;
+  // Si hay una partida abierta en detalle, el rail sigue la etapa REAL de esa
+  // partida (no la pestaña de origen). Si no, sigue la pestaña actual.
+  let refId = vista;
+  if (subVista === "detalle" && partidaAbiertaId && cacheElaboraciones[partidaAbiertaId]) {
+    refId = cacheElaboraciones[partidaAbiertaId].etapaActualId;
+  }
+  const idxActual = items.findIndex(t => t.id === refId);
+  const pct = items.length > 1 ? (Math.max(idxActual,0) / (items.length - 1)) * 100 : 0;
   document.getElementById("tabs").innerHTML = `
     <div class="rail">
       <div class="rail-line"></div>
@@ -402,10 +420,12 @@ function render() {
 let recepSupervisor = "";
 let recepObservaciones = "";
 let entregasRecepcion = [];
+let recepEmpresaId = "";   // empresa de transporte elegida
+let recepChoferId = "";    // chofer elegido
 
 function nuevaEntregaVacia() {
   return {
-    tamboId: TAMBOS[0].id, ticket: "", litrosSocio: "", litrosFason: "",
+    tamboId: primerTamboLibre(), ticket: "", litrosSocio: "", litrosFason: "",
     silo: (CATALOGOS.silos[0] && CATALOGOS.silos[0].id) || "",
     ph: "", acidez: "", temp: "", mg: "", proteina: "", sng: "", agua: "",
     inhibidores: "", clostridios: ""
@@ -421,15 +441,110 @@ function totalesRecepcion() {
   return { socio, fason, total: socio + fason };
 }
 
+// ---- Empresa de transporte ----
+function pintarEmpresa() {
+  const wrap = document.getElementById("empresaWrap");
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <select id="recEmpresa" onchange="window.onCambioEmpresa(this.value)">
+      <option value="">— Elegir empresa —</option>
+      ${CATALOGOS.empresas.map(e=>`<option value="${e.id}" ${recepEmpresaId===e.id?'selected':''}>${e.nombre}</option>`).join("")}
+      <option value="__nueva__">+ Nueva empresa…</option>
+    </select>
+    <div id="nuevaEmpresaBox"></div>`;
+}
+
+window.onCambioEmpresa = function (valor) {
+  if (valor === "__nueva__") {
+    document.getElementById("nuevaEmpresaBox").innerHTML = `
+      <div class="fila-botones" style="margin-top:8px;">
+        <input type="text" id="inpNuevaEmpresa" placeholder="Nombre de la empresa" style="flex:1;">
+        <button class="btn-chico" onclick="window.crearEmpresa()">Guardar</button>
+      </div>`;
+    document.getElementById("inpNuevaEmpresa").focus();
+  } else {
+    recepEmpresaId = valor;
+    recepChoferId = ""; // al cambiar empresa, reseteo chofer (se filtra por empresa)
+    document.getElementById("nuevaEmpresaBox").innerHTML = "";
+    pintarChofer();
+  }
+};
+
+window.crearEmpresa = async function () {
+  const nombre = document.getElementById("inpNuevaEmpresa").value.trim();
+  if (!nombre) return;
+  try {
+    const ref = await addDoc(collection(db, "empresasTransporte"), { nombre, creadoEn: serverTimestamp() });
+    await cargarEmpresasYChoferes();
+    recepEmpresaId = ref.id;
+    recepChoferId = "";
+    pintarEmpresa();
+    pintarChofer();
+  } catch (e) {
+    document.getElementById("nuevaEmpresaBox").innerHTML = `<div class="msg-error">${e.message}</div>`;
+  }
+};
+
+// ---- Chofer (filtrado por empresa) ----
+function pintarChofer() {
+  const wrap = document.getElementById("choferWrap");
+  if (!wrap) return;
+  if (!recepEmpresaId) {
+    wrap.innerHTML = `<div class="hint">Elegí primero la empresa de transporte.</div>`;
+    return;
+  }
+  const choferesEmpresa = CATALOGOS.choferes.filter(c => c.empresaId === recepEmpresaId);
+  wrap.innerHTML = `
+    <select id="recChofer" onchange="window.onCambioChofer(this.value)">
+      <option value="">— Elegir chofer —</option>
+      ${choferesEmpresa.map(c=>`<option value="${c.id}" ${recepChoferId===c.id?'selected':''}>${c.nombre}</option>`).join("")}
+      <option value="__nuevo__">+ Nuevo chofer…</option>
+    </select>
+    <div id="nuevoChoferBox"></div>`;
+}
+
+window.onCambioChofer = function (valor) {
+  if (valor === "__nuevo__") {
+    document.getElementById("nuevoChoferBox").innerHTML = `
+      <div class="fila-botones" style="margin-top:8px;">
+        <input type="text" id="inpNuevoChofer" placeholder="Nombre del chofer" style="flex:1;">
+        <button class="btn-chico" onclick="window.crearChofer()">Guardar</button>
+      </div>`;
+    document.getElementById("inpNuevoChofer").focus();
+  } else {
+    recepChoferId = valor;
+    document.getElementById("nuevoChoferBox").innerHTML = "";
+  }
+};
+
+window.crearChofer = async function () {
+  const nombre = document.getElementById("inpNuevoChofer").value.trim();
+  if (!nombre || !recepEmpresaId) return;
+  try {
+    const ref = await addDoc(collection(db, "choferes"), { nombre, empresaId: recepEmpresaId, creadoEn: serverTimestamp() });
+    await cargarEmpresasYChoferes();
+    recepChoferId = ref.id;
+    pintarChofer();
+  } catch (e) {
+    document.getElementById("nuevoChoferBox").innerHTML = `<div class="msg-error">${e.message}</div>`;
+  }
+};
+
 function renderRecepcion(main) {
   if (entregasRecepcion.length === 0) entregasRecepcion = [nuevaEntregaVacia()];
   main.innerHTML = `
     <div class="card">
-      <h3>Datos generales</h3>
+      <h3>Camión / recibo del día</h3>
       <label>Fecha</label>
       <input type="text" value="${fechaHoyISO()}" disabled>
       <label>Supervisor</label>
       <input type="text" id="recSupervisor" placeholder="Quién recibe" value="${recepSupervisor}">
+
+      <label>Empresa de transporte</label>
+      <div id="empresaWrap"></div>
+
+      <label>Chofer</label>
+      <div id="choferWrap"></div>
     </div>
 
     <div id="entregasCont"></div>
@@ -442,18 +557,20 @@ function renderRecepcion(main) {
 
     <div class="card">
       <h3>Observaciones</h3>
-      <textarea id="recObs" rows="3" style="width:100%; background:var(--graphite); border:1px solid var(--line); color:var(--curd); border-radius:6px; padding:10px; font-family:'Inter',sans-serif; font-size:15px;" placeholder="Notas del recibo del día…">${recepObservaciones}</textarea>
+      <textarea id="recObs" rows="3" style="width:100%; background:var(--graphite); border:1px solid var(--line); color:var(--curd); border-radius:6px; padding:10px; font-family:'Inter',sans-serif; font-size:15px;" placeholder="Notas del recibo…">${recepObservaciones}</textarea>
     </div>
 
     <div class="fila-botones"><button class="btn" onclick="window.registrarRecepcion()">Registrar recepción</button></div>
     <div id="recMsg"></div>
-    <div class="hint">Un recibo del día con varios tambos. Cada tambo carga litros socio y fasón por separado. No bloquea el arranque de una elaboración. Los datos de liquidación al productor (UREA, PAL, CAS, RCS, RBT) no van acá — se miden en funesil.</div>
+    <div class="hint">El recibo es el camión que ingresa a planta con la leche de varios tambos. Cada tambo carga litros socio y fasón por separado. No bloquea el arranque de una elaboración. Los datos de liquidación al productor (UREA, PAL, CAS, RCS, RBT) no van acá — se miden en funesil.</div>
 
     <div class="card">
       <h3>Recibos de hoy</h3>
       <div id="listaRecepciones"><div class="empty">Cargando…</div></div>
     </div>`;
 
+  pintarEmpresa();
+  pintarChofer();
   pintarEntregas();
   pintarTotalRecepcion();
 
@@ -466,7 +583,11 @@ function renderRecepcion(main) {
       const r = d.data();
       const t = r.totales || {};
       const nEntregas = (r.entregas || []).length;
-      return `<div class="recepcion-row"><span>${nEntregas} tambo${nEntregas!==1?'s':''}</span><span>Socio ${(t.socio||0).toLocaleString('es-AR')} L</span><span>Fasón ${(t.fason||0).toLocaleString('es-AR')} L</span><span><b>${(t.total||0).toLocaleString('es-AR')} L</b></span></div>`;
+      const linea1 = [r.empresaNombre, r.choferNombre].filter(Boolean).join(" · ") || "Sin transporte";
+      return `<div style="padding:10px 0; border-bottom:1px solid var(--line);">
+        <div style="font-size:13px; color:var(--curd); margin-bottom:4px;">${linea1}</div>
+        <div class="recepcion-row" style="border:none; padding:0;"><span>${nEntregas} tambo${nEntregas!==1?'s':''}</span><span>Socio ${(t.socio||0).toLocaleString('es-AR')}</span><span>Fasón ${(t.fason||0).toLocaleString('es-AR')}</span><span style="color:var(--whey);"><b>${(t.total||0).toLocaleString('es-AR')} L</b></span></div>
+      </div>`;
     }).join("");
   });
   listenersActivos.push(unsub);
@@ -507,13 +628,14 @@ function htmlEntregaCard(e, i) {
   return `
     <div class="tambo-card" data-entrega="${i}">
       <div class="tambo-head">
-        <span class="tambo-title" id="tituloEntrega_${i}">${titulo}</span>
+        <select class="tambo-select" style="flex:1; margin-bottom:0;" onchange="window.setTamboEntrega(${i},this.value)">
+          ${TAMBOS.map(t=>{
+            const usadoEnOtra = entregasRecepcion.some((oe, oi) => oi !== i && oe.tamboId === t.id);
+            return `<option value="${t.id}" ${e.tamboId===t.id?'selected':''} ${usadoEnOtra?'disabled':''}>${t.nombre}${usadoEnOtra?' (ya cargado)':''}</option>`;
+          }).join("")}
+        </select>
         ${entregasRecepcion.length > 1 ? `<button class="tambo-del" onclick="window.quitarEntrega(${i})">Quitar</button>` : ''}
       </div>
-
-      <select class="tambo-select" onchange="window.setTamboEntrega(${i},this.value)">
-        ${TAMBOS.map(t=>`<option value="${t.id}" ${e.tamboId===t.id?'selected':''}>${t.nombre}</option>`).join("")}
-      </select>
 
       <div class="litros-row">
         <div class="litros-cell">
@@ -564,10 +686,17 @@ function pintarTotalRecepcion() {
 window.setEntrega = function (i, campo, valor) { entregasRecepcion[i][campo] = valor; };
 window.setTamboEntrega = function (i, valor) {
   entregasRecepcion[i].tamboId = valor;
-  const tambo = TAMBOS.find(t => t.id === valor);
-  const titEl = document.getElementById(`tituloEntrega_${i}`);
-  if (titEl && tambo) titEl.textContent = tambo.nombre; // actualiza el título en vivo
+  // Repintar todas las tarjetas para que el tambo recién elegido quede
+  // deshabilitado en las demás (no se puede repetir tambo en un recibo).
+  // Se preservan los datos porque están en memoria (entregasRecepcion).
+  pintarEntregas();
 };
+
+function primerTamboLibre() {
+  const usados = new Set(entregasRecepcion.map(e => e.tamboId));
+  const libre = TAMBOS.find(t => !usados.has(t.id));
+  return libre ? libre.id : TAMBOS[0].id;
+}
 window.setEntregaLitros = function (i, campo, valor) {
   entregasRecepcion[i][campo] = valor;
   // actualizar el total de ESTE tambo (celda) sin repintar el input activo
@@ -579,20 +708,13 @@ window.setEntregaLitros = function (i, campo, valor) {
 };
 
 window.agregarEntrega = function () {
-  entregasRecepcion.push(nuevaEntregaVacia());
-  const cont = document.getElementById("entregasCont");
-  if (cont) {
-    // Añadir SOLO la tarjeta nueva al final, sin regenerar las anteriores
-    // (así no se pierde lo ya tipeado en los tambos previos).
-    const i = entregasRecepcion.length - 1;
-    cont.insertAdjacentHTML("beforeend", htmlEntregaCard(entregasRecepcion[i], i));
-    // La primera tarjeta ahora tiene que mostrar su botón "Quitar" (antes estaba
-    // sola y no lo tenía): si pasó de 1 a 2, repintamos solo esa primera.
-    if (entregasRecepcion.length === 2) {
-      const primera = cont.querySelector('[data-entrega="0"]');
-      if (primera) primera.outerHTML = htmlEntregaCard(entregasRecepcion[0], 0);
-    }
+  if (entregasRecepcion.length >= TAMBOS.length) {
+    const msg = document.getElementById("recMsg");
+    if (msg) msg.innerHTML = `<div class="msg-error">Ya cargaste todos los tambos disponibles.</div>`;
+    return;
   }
+  entregasRecepcion.push(nuevaEntregaVacia());
+  pintarEntregas();      // repinta todas: refresca qué tambos quedan libres
   pintarTotalRecepcion();
 };
 
@@ -629,9 +751,15 @@ window.registrarRecepcion = async function () {
   });
 
   try {
+    const empresa = CATALOGOS.empresas.find(x => x.id === recepEmpresaId);
+    const chofer = CATALOGOS.choferes.find(x => x.id === recepChoferId);
     await addDoc(collection(db, "recepciones"), {
       fecha: fechaHoyISO(),
       supervisor: recepSupervisor || null,
+      empresaId: recepEmpresaId || null,
+      empresaNombre: empresa ? empresa.nombre : null,
+      choferId: recepChoferId || null,
+      choferNombre: chofer ? chofer.nombre : null,
       observaciones: recepObservaciones || null,
       entregas,
       totales: t,
@@ -640,8 +768,10 @@ window.registrarRecepcion = async function () {
     msg.innerHTML = `<div class="msg-ok">Recibo registrado (${entregas.length} tambo${entregas.length!==1?'s':''}, ${t.total.toLocaleString('es-AR')} L).</div>`;
     // limpiar para un recibo nuevo
     recepSupervisor = ""; recepObservaciones = ""; entregasRecepcion = [nuevaEntregaVacia()];
+    recepEmpresaId = ""; recepChoferId = "";
     document.getElementById("recSupervisor").value = "";
     document.getElementById("recObs").value = "";
+    pintarEmpresa(); pintarChofer();
     pintarEntregas();
     pintarTotalRecepcion();
   } catch (e) { msg.innerHTML = `<div class="msg-error">Error: ${e.message}</div>`; }
@@ -789,6 +919,7 @@ function renderDetallePartida(main) {
     cacheElaboraciones[partidaAbiertaId] = e;
     const secuencia = await obtenerSecuenciaPartida(e.variedadId);
     pintarDetalle(wrap, partidaAbiertaId, e, secuencia);
+    renderTabs(); // el rail de arriba sigue la etapa real de la partida
   });
   listenersActivos.push(unsub);
 }
@@ -829,8 +960,6 @@ function pintarDetalle(wrap, id, e, secuencia) {
       <div class="partida-header-label">Partida</div>
       <div class="partida-header-name">${nombreVariedad(e.variedadId)} · Tina ${e.tinaFisica} N°${e.nTinaVariedad}</div>
     </div>
-
-    ${renderMiniRail(secuencia, e.etapaActualId)}
 
     <div class="card cycle">
       <div class="priority-tag">${fermento || nombreEtapaActual}</div>
