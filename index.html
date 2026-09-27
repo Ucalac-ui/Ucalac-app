@@ -417,6 +417,7 @@ function render() {
 // Estado en memoria del recibo del día que se está cargando (Forma B: un recibo
 // del día con varias entregas adentro, una por tambo, cada una con litros
 // socio/fasón + análisis). No se persiste hasta tocar "Registrar recepción".
+let recepFecha = "";       // fecha del recibo (editable; arranca en hoy)
 let recepSupervisor = "";
 let recepObservaciones = "";
 let entregasRecepcion = [];
@@ -453,6 +454,8 @@ function pintarEmpresa() {
     </select>
     <div id="nuevaEmpresaBox"></div>`;
 }
+
+window.setRecepFecha = function (valor) { recepFecha = valor; };
 
 window.onCambioEmpresa = function (valor) {
   if (valor === "__nueva__") {
@@ -535,8 +538,12 @@ function renderRecepcion(main) {
   main.innerHTML = `
     <div class="card">
       <h3>Camión / recibo del día</h3>
-      <label>Fecha</label>
-      <input type="text" value="${fechaHoyISO()}" disabled>
+      <label>Fecha del recibo</label>
+      <input type="date" id="recFecha" value="${recepFecha || fechaHoyISO()}" max="${fechaHoyISO()}"
+             onchange="window.setRecepFecha(this.value)"
+             onclick="if(this.showPicker)this.showPicker()"
+             style="width:100%;">
+      <div class="hint" style="margin-top:2px;">Se puede cambiar si el recibo se carga otro día (ej. leche recibida el fin de semana y cargada el lunes).</div>
       <label>Supervisor</label>
       <input type="text" id="recSupervisor" placeholder="Quién recibe" value="${recepSupervisor}">
 
@@ -754,7 +761,7 @@ window.registrarRecepcion = async function () {
     const empresa = CATALOGOS.empresas.find(x => x.id === recepEmpresaId);
     const chofer = CATALOGOS.choferes.find(x => x.id === recepChoferId);
     await addDoc(collection(db, "recepciones"), {
-      fecha: fechaHoyISO(),
+      fecha: recepFecha || fechaHoyISO(),   // fecha del evento (cuándo llegó la leche), editable
       supervisor: recepSupervisor || null,
       empresaId: recepEmpresaId || null,
       empresaNombre: empresa ? empresa.nombre : null,
@@ -763,14 +770,15 @@ window.registrarRecepcion = async function () {
       observaciones: recepObservaciones || null,
       entregas,
       totales: t,
-      creadoEn: serverTimestamp()
+      creadoEn: serverTimestamp()           // fecha de registro (cuándo se cargó al sistema)
     });
     msg.innerHTML = `<div class="msg-ok">Recibo registrado (${entregas.length} tambo${entregas.length!==1?'s':''}, ${t.total.toLocaleString('es-AR')} L).</div>`;
     // limpiar para un recibo nuevo
     recepSupervisor = ""; recepObservaciones = ""; entregasRecepcion = [nuevaEntregaVacia()];
-    recepEmpresaId = ""; recepChoferId = "";
+    recepEmpresaId = ""; recepChoferId = ""; recepFecha = "";
     document.getElementById("recSupervisor").value = "";
     document.getElementById("recObs").value = "";
+    const fechaEl = document.getElementById("recFecha"); if (fechaEl) fechaEl.value = fechaHoyISO();
     pintarEmpresa(); pintarChofer();
     pintarEntregas();
     pintarTotalRecepcion();
