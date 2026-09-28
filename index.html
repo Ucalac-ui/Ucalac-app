@@ -224,6 +224,96 @@
     .pcard-reloj{ font-size:38px; }
     .pkpi-num{ font-size:44px; }
   }
+
+  /* ---- Sub-pestañas del panel ---- */
+  .subtabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+  .subtab{ background:var(--graphite-2); border:1px solid var(--line); color:var(--curd-dim); padding:9px 15px; border-radius:20px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .subtab.active{ background:var(--whey); color:var(--graphite); border-color:var(--whey); }
+  .pcard-datos{ display:flex; gap:14px; margin-top:9px; font-size:12px; color:var(--curd-dim); flex-wrap:wrap; }
+  .pcard-datos b{ color:var(--curd); font-family:'JetBrains Mono',monospace; }
+
+  /* ---- Por etapa: chips ---- */
+  .etapa-chips{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:16px; }
+  .echip{ background:var(--graphite-2); border:1px solid var(--line); color:var(--curd-dim); padding:8px 13px; border-radius:8px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:7px; -webkit-tap-highlight-color:transparent; }
+  .echip.active{ background:var(--sage-dim); border-color:var(--sage); color:var(--curd); }
+  .echip .cnt{ background:var(--whey); color:var(--graphite); border-radius:10px; padding:1px 7px; font-size:11px; }
+  .echip.active .cnt{ background:var(--curd); }
+
+  /* ---- Parte diario: timeline ---- */
+  .timeline{ position:relative; padding-left:20px; }
+  .timeline::before{ content:''; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background:var(--line); }
+  .tarea{ position:relative; background:var(--graphite-2); border:1px solid var(--line); border-radius:9px; padding:12px 14px; margin-bottom:10px; }
+  .tarea::before{ content:''; position:absolute; left:-18px; top:16px; width:11px; height:11px; border-radius:50%; background:var(--sage); border:2px solid var(--graphite); }
+  .tarea-top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .tarea-hora{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; color:var(--whey); }
+  .tarea-estado{ font-size:10px; text-transform:uppercase; padding:2px 8px; border-radius:10px; font-weight:700; }
+  .tarea-estado.hecho{ background:rgba(113,144,106,0.2); color:var(--sage); }
+  .tarea-titulo{ font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; margin-top:6px; }
+  .tarea-sub{ font-size:12.5px; color:#8b9384; margin-top:2px; }
+
+  /* ---- Planificación: toolbar + calendario columnas + resumen ---- */
+  .plan-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .plan-nav{ display:flex; align-items:center; gap:10px; }
+  .plan-nav button{ background:var(--graphite-2); border:1px solid var(--line); color:var(--curd); width:34px; height:34px; border-radius:8px; font-size:16px; cursor:pointer; }
+  .plan-periodo{ font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:15px; letter-spacing:0.02em; }
+  .plan-toggle{ display:flex; gap:4px; background:var(--graphite-2); border:1px solid var(--line); border-radius:20px; padding:3px; }
+  .plan-toggle button{ background:none; border:none; color:var(--curd-dim); padding:6px 15px; border-radius:16px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; cursor:pointer; }
+  .plan-toggle button.on{ background:var(--whey); color:var(--graphite); }
+  .cal{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .cal-col{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:8px; min-height:180px; }
+  .cal-col.hoy{ border-color:var(--whey); }
+  .cal-head{ text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; padding-bottom:8px; border-bottom:1px solid var(--line); margin-bottom:8px; }
+  .cal-head .fecha{ display:block; font-size:10px; color:#8b9384; font-weight:400; }
+  .cal-head.hoy{ color:var(--whey); }
+  .ptina{ background:var(--graphite); border:1px solid var(--line); border-left:3px solid var(--whey); border-radius:6px; padding:7px 8px; margin-bottom:6px; font-size:11.5px; }
+  .ptina.hecha{ opacity:0.6; border-left-color:var(--sage); background:rgba(113,144,106,0.08); }
+  .ptina.curso{ border-left-color:var(--whey); }
+  .ptina.desvio{ border-left-color:var(--rind); }
+  .ptina-var{ font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:13px; }
+  .ptina-cant{ color:#8b9384; }
+  .ptina-estado{ font-size:9px; text-transform:uppercase; margin-top:3px; padding:1px 6px; border-radius:8px; display:inline-block; }
+  .ptina-estado.hecha{ background:rgba(113,144,106,0.2); color:var(--sage); }
+  .ptina-estado.curso{ background:rgba(232,178,60,0.15); color:var(--whey); }
+  .ptina-estado.plan{ background:rgba(139,147,132,0.15); color:#8b9384; }
+  .ptina-estado.desvio{ background:rgba(168,68,45,0.2); color:#e0a89b; }
+  .ptina-del{ float:right; color:#6f766a; cursor:pointer; font-size:14px; line-height:1; }
+  .cal-add{ text-align:center; color:#7a8074; font-size:11px; border:1px dashed var(--line); border-radius:6px; padding:7px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .cal-add:active{ border-color:var(--whey); }
+  .plan-resumen{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:13px 14px; margin-top:16px; }
+  .mes-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .mes-dow{ text-align:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:11px; color:#8b9384; padding-bottom:4px; }
+  .mes-cell{ background:var(--graphite-2); border:1px solid var(--line); border-radius:8px; min-height:70px; padding:6px; }
+  .mes-cell.fuera{ opacity:0.25; }
+  .mes-cell.hoy{ border-color:var(--whey); }
+  .mes-num{ font-family:'JetBrains Mono',monospace; font-size:12px; color:#8b9384; margin-bottom:4px; }
+  .mes-cell.hoy .mes-num{ color:var(--whey); font-weight:700; }
+  .mes-tina{ font-size:9.5px; border-radius:4px; padding:2px 4px; margin-bottom:3px; font-family:'Barlow Condensed',sans-serif; font-weight:600; text-transform:uppercase; }
+  .mes-tina.plan{ background:rgba(139,147,132,0.15); color:#a8b09e; }
+  .mes-tina.hecha{ background:rgba(113,144,106,0.18); color:var(--sage); }
+  .mes-tina.curso{ background:rgba(232,178,60,0.15); color:var(--whey); }
+  .pres-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:11px; }
+  .pres-kpi{ text-align:center; }
+  .pres-num{ font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; color:var(--curd); line-height:1; }
+  .pres-lbl{ font-size:9.5px; color:#8b9384; text-transform:uppercase; letter-spacing:0.03em; margin-top:4px; }
+  .pres-var{ border-top:1px solid var(--line); padding-top:10px; }
+  .pres-var-title{ font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.04em; color:#8b9384; margin-bottom:7px; }
+  .pres-var-row{ display:flex; align-items:center; gap:10px; margin-bottom:5px; font-size:11.5px; }
+  .pres-var-row > span:first-child{ width:80px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; }
+  .pres-var-bar{ flex:1; height:11px; background:var(--graphite); border-radius:4px; overflow:hidden; }
+  .pres-var-bar > span{ display:block; height:100%; background:var(--whey); }
+  .pres-var-val{ width:120px; text-align:right; font-family:'JetBrains Mono',monospace; color:var(--curd-dim); font-size:11px; }
+
+  /* modal simple para planificar */
+  .modal-bg{ position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .modal{ background:var(--graphite-2); border:1px solid var(--whey-dim); border-radius:12px; padding:20px; max-width:340px; width:100%; }
+  .modal h3{ font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; margin:0 0 14px; }
+
+  @media (min-width:700px){
+    .cal-col{ min-height:220px; }
+  }
+  @media (max-width:680px){
+    .cal{ grid-template-columns:1fr 1fr; }
+  }
   .hint{ font-size:11.5px; color:#8b9384; margin-top:6px; line-height:1.4; }
 </style>
 </head>
@@ -248,7 +338,7 @@ import {
   getAuth, signInAnonymously, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, getDoc, getDocs,
+  getFirestore, collection, doc, addDoc, updateDoc, getDoc, getDocs, deleteDoc,
   query, where, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -356,6 +446,21 @@ async function crearElaboracion({ variedadId, tinaFisica, silo, litros, opcionFe
     creadoEn: serverTimestamp(), actualizadoEn: serverTimestamp()
   };
   const docRef = await addDoc(ref, nueva);
+
+  // Vínculo automático con la planificación: si hay una tina planificada de esta
+  // variedad para hoy que todavía no fue cumplida, la marcamos como cumplida por
+  // esta elaboración real (la primera pendiente). Si no hay, no pasa nada — en el
+  // tablero aparecerá como "desvío" (se elaboró algo no planificado).
+  try {
+    const qPlan = query(collection(db, "planificacion"),
+      where("fecha", "==", fecha), where("variedadId", "==", variedadId));
+    const snapPlan = await getDocs(qPlan);
+    const pendiente = snapPlan.docs.find(d => !d.data().cumplidaPor);
+    if (pendiente) {
+      await updateDoc(doc(db, "planificacion", pendiente.id), { cumplidaPor: docRef.id });
+    }
+  } catch (e) { /* la planificación es opcional, no bloquea la elaboración */ }
+
   return docRef.id;
 }
 
@@ -675,7 +780,13 @@ function mesActualISO() {
 // ===== PANEL / DASHBOARD (estado ahora + métricas del día) =====
 
 let panelListeners = [];
-let panelPartidas = {};   // id -> data de partidas activas (para el tick del reloj)
+let panelPartidas = {};       // id -> data de partidas activas (para el tick del reloj)
+let panelSubvista = "tina";   // tina | etapa | tareas | plan
+let panelTodas = [];          // cache de todas las elaboraciones (para re-render sin re-consultar)
+let etapaSeleccionada = "salado"; // para la vista por etapa
+let planModoActual = "semana";
+let planOffset = 0;           // semanas/meses de desplazamiento desde hoy
+let planCache = [];           // docs de la colección planificacion
 
 function limpiarPanelListeners() {
   panelListeners.forEach(u => u());
@@ -690,83 +801,197 @@ function renderPanel(main) {
       <span class="panel-title">Panel de producción</span>
       <span class="panel-reloj" id="panelHora"></span>
     </div>
-    <div class="panel-sec">Partidas activas</div>
-    <div id="panelActivas"><div class="empty">Cargando…</div></div>
-
-    <div class="panel-sec" style="margin-top:22px;">Métricas del día</div>
-    <div class="panel-kpis" id="panelKpis"></div>
+    <div class="subtabs">
+      <div class="subtab ${panelSubvista==='tina'?'active':''}" onclick="window.panelIr('tina')">Por tina</div>
+      <div class="subtab ${panelSubvista==='etapa'?'active':''}" onclick="window.panelIr('etapa')">Por etapa</div>
+      <div class="subtab ${panelSubvista==='tareas'?'active':''}" onclick="window.panelIr('tareas')">Parte diario</div>
+      <div class="subtab ${panelSubvista==='plan'?'active':''}" onclick="window.panelIr('plan')">Planificación</div>
+    </div>
+    <div id="panelBody"><div class="empty">Cargando…</div></div>
   `;
 
-  // Partidas activas: TODAS las que están en curso ahora mismo, sin importar
-  // qué día arrancaron (una elaboración que empezó ayer y sigue hoy debe verse).
-  // Se consideran activas las que no cerraron el ciclo — como el motor deja la
-  // partida "viva" mientras tiene etapaActualId, traemos todas y filtramos las
-  // que siguen su recorrido. Para las métricas del día usamos la fecha aparte.
-  const q = query(collection(db, "elaboraciones"));
-  const unsub = onSnapshot(q, async (snap) => {
-    const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    await pintarPanel(todas);
+  // Escuchamos todas las elaboraciones (para tina/etapa/tareas) y planificación (para plan).
+  const unsub = onSnapshot(query(collection(db, "elaboraciones")), (snap) => {
+    panelTodas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    pintarSubvista();
   });
   panelListeners.push(unsub);
+
+  // Listener de planificación (se usa en la vista plan y para vincular)
+  const unsubPlan = onSnapshot(query(collection(db, "planificacion")), (snap) => {
+    planCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (panelSubvista === "plan") pintarSubvista();
+  });
+  panelListeners.push(unsubPlan);
 }
 
-async function pintarPanel(todas) {
-  const hoy = fechaHoyISO();
-  // Activas = partidas en curso ahora (cualquier día de inicio).
-  const activas = todas.filter(e => e.etapaActualId);
+window.panelIr = function (sv) {
+  panelSubvista = sv;
+  // refrescar subtabs activos
+  document.querySelectorAll(".subtab").forEach(t => t.classList.remove("active"));
+  const idx = { tina:0, etapa:1, tareas:2, plan:3 }[sv];
+  document.querySelectorAll(".subtab")[idx].classList.add("active");
+  pintarSubvista();
+};
+
+function pintarSubvista() {
+  const body = document.getElementById("panelBody");
+  if (!body) return;
+  if (panelSubvista === "tina") return pintarPorTina(body);
+  if (panelSubvista === "etapa") return pintarPorEtapa(body);
+  if (panelSubvista === "tareas") return pintarParteDiario(body);
+  if (panelSubvista === "plan") return pintarPlanificacion(body);
+}
+
+// Card de partida reutilizable (con datos: litros, hormas, pH)
+async function cardPartida(e, opts = {}) {
+  const secuencia = await obtenerSecuenciaPartida(e.variedadId);
+  const segs = calcularSegundosTranscurridos(e);
+  const nombreEtapa = (CATALOGOS.etapas[e.etapaActualId] && CATALOGOS.etapas[e.etapaActualId].nombre) || e.etapaActualId;
+  const datos = [];
+  if (e.litros != null) datos.push(`<span>Litros: <b>${(num(e.litros)||0).toLocaleString('es-AR')}</b></span>`);
+  if (e.gb != null) datos.push(`<span>%GB: <b>${e.gb}</b></span>`);
+  const railHtml = opts.sinRail ? '' : renderMiniRail(secuencia, e.etapaActualId);
+  return `
+    <div class="pcard ${e.enCurso?'':'pausada'}" onclick="window.abrirDesdePanel('${e.id}','${e.etapaActualId}')">
+      <div class="pcard-top">
+        <div>
+          <div class="pcard-var">${nombreVariedad(e.variedadId)}</div>
+          <div class="pcard-sub">Tina ${e.tinaFisica} · N°${e.nTinaVariedad}</div>
+        </div>
+        <div>
+          <div class="pcard-reloj ${e.enCurso?'glow':'pausada'}" id="reloj_${e.id}">${formatearHMS(segs)}</div>
+          <div class="pcard-etapa">${nombreEtapa}${e.enCurso?'':' · pausado'}</div>
+        </div>
+      </div>
+      ${datos.length?`<div class="pcard-datos">${datos.join("")}</div>`:''}
+      ${railHtml}
+    </div>`;
+}
+
+// ---- VISTA 1: POR TINA ----
+async function pintarPorTina(body) {
+  const activas = panelTodas.filter(e => e.etapaActualId);
   panelPartidas = {};
   activas.forEach(e => { panelPartidas[e.id] = e; });
 
-  // --- Partidas activas ---
-  const contA = document.getElementById("panelActivas");
-  if (contA) {
-    if (activas.length === 0) {
-      contA.innerHTML = `<div class="empty">No hay partidas activas ahora mismo.</div>`;
-    } else {
-      // Necesitamos la secuencia de cada variedad para el mini-rail
-      const cards = await Promise.all(activas.map(async e => {
-        const secuencia = await obtenerSecuenciaPartida(e.variedadId);
-        const segs = calcularSegundosTranscurridos(e);
-        const nombreEtapa = (CATALOGOS.etapas[e.etapaActualId] && CATALOGOS.etapas[e.etapaActualId].nombre) || e.etapaActualId;
-        return `
-          <div class="pcard ${e.enCurso?'':'pausada'}" onclick="window.abrirDesdePanel('${e.id}','${e.etapaActualId}')">
-            <div class="pcard-top">
-              <div>
-                <div class="pcard-var">${nombreVariedad(e.variedadId)}</div>
-                <div class="pcard-sub">Tina ${e.tinaFisica} · N°${e.nTinaVariedad}</div>
-              </div>
-              <div>
-                <div class="pcard-reloj ${e.enCurso?'glow':'pausada'}" id="reloj_${e.id}">${formatearHMS(segs)}</div>
-                <div class="pcard-etapa">${nombreEtapa}${e.enCurso?'':' · pausado'}</div>
-              </div>
-            </div>
-            ${renderMiniRail(secuencia, e.etapaActualId)}
-          </div>`;
-      }));
-      contA.innerHTML = `<div class="panel-cards">${cards.join("")}</div>`;
-    }
+  const hoy = fechaHoyISO();
+  const deHoy = panelTodas.filter(e => e.fecha === hoy);
+  const tinasActivas = activas.filter(e => e.etapaActualId === "elaboracion").length;
+  let litrosHoy = 0; deHoy.forEach(e => { litrosHoy += num(e.litros) || 0; });
+  const enCurso = activas.filter(e => e.enCurso).length;
+  const fmt = (n) => n.toLocaleString('es-AR');
+
+  let cardsHtml = `<div class="empty">No hay partidas activas ahora mismo.</div>`;
+  if (activas.length > 0) {
+    const cards = await Promise.all(activas.map(e => cardPartida(e)));
+    cardsHtml = `<div class="panel-cards">${cards.join("")}</div>`;
   }
 
-  // --- Métricas del día (solo las partidas cuya fecha es hoy) ---
-  const contK = document.getElementById("panelKpis");
-  if (contK) {
-    const deHoy = todas.filter(e => e.fecha === hoy);
-    const tinasActivas = activas.filter(e => e.etapaActualId === "elaboracion").length;
-    const partidasHoy = deHoy.length;
-    let litrosHoy = 0;
-    deHoy.forEach(e => { litrosHoy += num(e.litros) || 0; });
-    const enCurso = activas.filter(e => e.enCurso).length;
-
-    const fmt = (n) => n.toLocaleString('es-AR');
-    contK.innerHTML = `
+  body.innerHTML = `
+    <div class="panel-sec">Partidas activas</div>
+    ${cardsHtml}
+    <div class="panel-sec" style="margin-top:22px;">Métricas del día</div>
+    <div class="panel-kpis">
       <div class="pkpi"><div class="pkpi-num">${tinasActivas}</div><div class="pkpi-lbl">Tinas en elaboración</div></div>
-      <div class="pkpi"><div class="pkpi-num">${partidasHoy}</div><div class="pkpi-lbl">Partidas hoy</div></div>
+      <div class="pkpi"><div class="pkpi-num">${deHoy.length}</div><div class="pkpi-lbl">Partidas hoy</div></div>
       <div class="pkpi"><div class="pkpi-num">${fmt(litrosHoy)}</div><div class="pkpi-lbl">Litros del día</div></div>
-      <div class="pkpi"><div class="pkpi-num">${enCurso}</div><div class="pkpi-lbl">Relojes corriendo</div></div>`;
-  }
+      <div class="pkpi"><div class="pkpi-num">${enCurso}</div><div class="pkpi-lbl">Relojes corriendo</div></div>
+    </div>`;
 }
 
-// Ir al detalle de una partida desde el panel (setea la pestaña correcta)
+// ---- VISTA 2: POR ETAPA ----
+async function pintarPorEtapa(body) {
+  const activas = panelTodas.filter(e => e.etapaActualId);
+  panelPartidas = {};
+  activas.forEach(e => { panelPartidas[e.id] = e; });
+
+  const etapasOrden = ["elaboracion","moldeo","prensado","salado","oreo","envasado"];
+  const conteo = {};
+  etapasOrden.forEach(id => { conteo[id] = activas.filter(e => e.etapaActualId === id).length; });
+
+  const chips = etapasOrden.map(id => {
+    const nombre = (CATALOGOS.etapas[id] && CATALOGOS.etapas[id].nombre) || id;
+    return `<div class="echip ${etapaSeleccionada===id?'active':''}" onclick="window.panelEtapa('${id}')">
+      <span>${nombre}</span><span class="cnt">${conteo[id]}</span></div>`;
+  }).join("");
+
+  const enEtapa = activas.filter(e => e.etapaActualId === etapaSeleccionada);
+  const nombreSel = (CATALOGOS.etapas[etapaSeleccionada] && CATALOGOS.etapas[etapaSeleccionada].nombre) || etapaSeleccionada;
+  let listaHtml = `<div class="empty">No hay tinas en ${nombreSel.toLowerCase()} ahora.</div>`;
+  if (enEtapa.length > 0) {
+    const cards = await Promise.all(enEtapa.map(e => cardPartida(e, { sinRail:true })));
+    listaHtml = `<div class="panel-cards">${cards.join("")}</div>`;
+  }
+
+  body.innerHTML = `
+    <div class="etapa-chips">${chips}</div>
+    <div class="panel-sec">${nombreSel} — ${enEtapa.length} ${enEtapa.length===1?'tina':'tinas'}</div>
+    ${listaHtml}`;
+}
+
+window.panelEtapa = function (id) { etapaSeleccionada = id; pintarSubvista(); };
+
+// ---- VISTA 3: PARTE DIARIO ----
+async function pintarParteDiario(body) {
+  const hoy = fechaHoyISO();
+  panelPartidas = {};
+  panelTodas.filter(e => e.etapaActualId).forEach(e => { panelPartidas[e.id] = e; });
+
+  // Recibos de hoy
+  const snapRec = await getDocs(query(collection(db, "recepciones"), where("fecha", "==", hoy)));
+  const recibos = snapRec.docs.map(d => d.data());
+
+  // Construimos una lista de tareas HECHAS con hora, ordenadas cronológicamente.
+  const tareas = [];
+
+  recibos.forEach(r => {
+    (r.entregas || []).forEach(ent => {
+      tareas.push({
+        hora: r.creadoEn ? tsHora(r.creadoEn) : "—",
+        titulo: `Recibo de leche · ${ent.tamboNombre || ''}`,
+        sub: `${((ent.litrosSocio||0)+(ent.litrosFason||0)).toLocaleString('es-AR')} L${r.choferNombre?' · '+r.choferNombre:''}`
+      });
+    });
+  });
+
+  // Hitos sellados de las partidas de hoy
+  panelTodas.filter(e => e.fecha === hoy).forEach(e => {
+    const hitos = e.hitos || {};
+    Object.keys(hitos).forEach(k => {
+      const h = HITOS_ELAB.find(x => x.key === k);
+      if (!h) return;
+      let sub = `${nombreVariedad(e.variedadId)} · Tina ${e.tinaFisica} N°${e.nTinaVariedad}`;
+      if (h.mide && hitos[k][h.mide.campo] != null) sub += ` · ${h.mide.label}: ${hitos[k][h.mide.campo]}${h.mide.unit}`;
+      tareas.push({ hora: hitos[k].hora || "—", titulo: h.label, sub });
+    });
+  });
+
+  tareas.sort((a,b) => (a.hora||"").localeCompare(b.hora||""));
+
+  const listaHtml = tareas.length === 0
+    ? `<div class="empty">Sin actividad registrada hoy.</div>`
+    : `<div class="timeline">${tareas.map(t => `
+        <div class="tarea">
+          <div class="tarea-top"><span class="tarea-hora">${t.hora}</span><span class="tarea-estado hecho">Hecho</span></div>
+          <div class="tarea-titulo">${t.titulo}</div>
+          <div class="tarea-sub">${t.sub}</div>
+        </div>`).join("")}</div>`;
+
+  body.innerHTML = `
+    <div class="panel-sec">Parte del día — ${hoy}</div>
+    ${listaHtml}
+    <div class="hint" style="margin-top:14px;">Por ahora muestra lo ya realizado (recibos e hitos con hora). Las tareas <b>programadas a futuro</b> (sacar del saladero, medir pH…) se agregarán cuando definamos los tiempos objetivo de cada etapa con Ariel.</div>`;
+}
+
+function tsHora(ts) {
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  } catch { return "—"; }
+}
+
+// Ir al detalle de una partida desde el panel
 window.abrirDesdePanel = function (id, etapaId) {
   limpiarPanelListeners();
   vista = (etapaId === "elaboracion") ? "elaboracion" : etapaId;
@@ -774,6 +999,222 @@ window.abrirDesdePanel = function (id, etapaId) {
   partidaAbiertaId = id;
   renderTabs();
   render();
+};
+
+// ---- VISTA 4: PLANIFICACIÓN SEMANAL ----
+
+const DIAS_SEMANA = ["Lun","Mar","Mié","Jue","Vie"]; // Lun-Vie (no se elabora finde)
+
+function lunesDeSemana(offset) {
+  const d = new Date();
+  const dow = (d.getDay() + 6) % 7; // 0 = lunes
+  d.setDate(d.getDate() - dow + offset * 7);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function fechaISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function ddmm(d) { return `${d.getDate()}/${d.getMonth()+1}`; }
+
+async function pintarPlanificacion(body) {
+  if (planModoActual === "semana") return pintarPlanSemana(body);
+  return pintarPlanMes(body);
+}
+
+function toolbarPlan(periodoTxt) {
+  return `
+    <div class="plan-toolbar">
+      <div class="plan-nav">
+        <button onclick="window.planNav(-1)">‹</button>
+        <span class="plan-periodo">${periodoTxt}</span>
+        <button onclick="window.planNav(1)">›</button>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; font-size:10px; flex-wrap:wrap;">
+        <span class="ptina-estado plan">Planif.</span><span class="ptina-estado curso">En curso</span>
+        <span class="ptina-estado hecha">Hecha</span><span class="ptina-estado desvio">Desvío</span>
+      </div>
+      <div class="plan-toggle">
+        <button class="${planModoActual==='semana'?'on':''}" onclick="window.planModo('semana')">Semana</button>
+        <button class="${planModoActual==='mes'?'on':''}" onclick="window.planModo('mes')">Mes</button>
+      </div>
+    </div>`;
+}
+
+// Estado real de una planificada: cruza con las elaboraciones reales de ese día.
+// - hecha: hay una elaboración real de esa variedad ese día que la cumplió
+// - curso: hay una real de esa variedad ese día en marcha
+// - plan: todavía sin cumplir
+function estadoPlanificada(p) {
+  const realesDia = panelTodas.filter(e => e.fecha === p.fecha && e.variedadId === p.variedadId);
+  if (p.cumplidaPor) {
+    const real = realesDia.find(e => e.id === p.cumplidaPor);
+    if (real) return real.etapaActualId === "elaboracion" && real.enCurso ? "curso" : "hecha";
+  }
+  return "plan";
+}
+
+// Desvíos de un día: elaboraciones reales de variedades que NO estaban planificadas ese día.
+function desviosDia(fecha) {
+  const planVariedades = new Set(planCache.filter(p => p.fecha === fecha).map(p => p.variedadId));
+  const reales = panelTodas.filter(e => e.fecha === fecha);
+  const porVar = {};
+  reales.forEach(e => {
+    if (!planVariedades.has(e.variedadId)) {
+      porVar[e.variedadId] = (porVar[e.variedadId] || 0) + 1;
+    }
+  });
+  return porVar; // { variedadId: cantidad }
+}
+
+async function pintarPlanSemana(body) {
+  const lunes = lunesDeSemana(planOffset);
+  const dias = DIAS_SEMANA.map((nombre, i) => {
+    const d = new Date(lunes); d.setDate(lunes.getDate() + i);
+    return { nombre, fecha: fechaISO(d), ddmm: ddmm(d) };
+  });
+  const hoyISO = fechaHoyISO();
+  const viernes = new Date(lunes); viernes.setDate(lunes.getDate()+4);
+  const periodoTxt = `Semana ${ddmm(lunes)} – ${ddmm(viernes)}`;
+
+  const cols = dias.map(dia => {
+    const esHoy = dia.fecha === hoyISO;
+    const plans = planCache.filter(p => p.fecha === dia.fecha);
+    const desvios = desviosDia(dia.fecha);
+
+    const chipsPlan = plans.map(p => {
+      const est = estadoPlanificada(p);
+      const clase = est === "hecha" ? "hecha" : (est === "curso" ? "curso" : "");
+      const estLbl = est === "hecha" ? "Hecha" : (est === "curso" ? "En curso" : "Planificada");
+      const estClase = est === "hecha" ? "hecha" : (est === "curso" ? "curso" : "plan");
+      return `<div class="ptina ${clase}">
+        ${est==='plan'?`<span class="ptina-del" onclick="event.stopPropagation(); window.borrarPlan('${p.id}')">×</span>`:''}
+        <div class="ptina-var">${nombreVariedad(p.variedadId)} ×${p.cantidad}</div>
+        <span class="ptina-estado ${estClase}">${estLbl}</span>
+      </div>`;
+    }).join("");
+
+    const chipsDesvio = Object.keys(desvios).map(vid =>
+      `<div class="ptina desvio">
+        <div class="ptina-var">${nombreVariedad(vid)} ×${desvios[vid]}</div>
+        <div class="ptina-cant">no estaba planificado</div>
+        <span class="ptina-estado desvio">Desvío</span>
+      </div>`).join("");
+
+    return `<div class="cal-col ${esHoy?'hoy':''}">
+      <div class="cal-head ${esHoy?'hoy':''}">${dia.nombre}<span class="fecha">${dia.ddmm}${esHoy?' · hoy':''}</span></div>
+      ${chipsPlan}${chipsDesvio}
+      <div class="cal-add" onclick="window.abrirModalPlan('${dia.fecha}')">+ tina</div>
+    </div>`;
+  }).join("");
+
+  // Resumen de la semana
+  const fechasSemana = dias.map(d => d.fecha);
+  const plansSemana = planCache.filter(p => fechasSemana.includes(p.fecha));
+  const totalPlan = plansSemana.reduce((s,p) => s + (p.cantidad||0), 0);
+  let hechas = 0, enCurso = 0;
+  plansSemana.forEach(p => { const e = estadoPlanificada(p); if (e==='hecha') hechas += p.cantidad; if (e==='curso') enCurso += p.cantidad; });
+
+  // Previsto por variedad
+  const porVar = {};
+  plansSemana.forEach(p => { porVar[p.variedadId] = (porVar[p.variedadId]||0) + p.cantidad; });
+  const maxVar = Math.max(1, ...Object.values(porVar));
+  const litrosXtina = 9800; // estimación para litros previstos
+  const resumenVar = Object.keys(porVar).map(vid => {
+    const cant = porVar[vid];
+    return `<div class="pres-var-row"><span>${nombreVariedad(vid)}</span>
+      <span class="pres-var-bar"><span style="width:${(cant/maxVar*100).toFixed(0)}%"></span></span>
+      <span class="pres-var-val">${cant} ${cant===1?'tina':'tinas'} · ~${(cant*litrosXtina).toLocaleString('es-AR')} L</span></div>`;
+  }).join("") || `<div class="hint">Sin planificación esta semana.</div>`;
+
+  body.innerHTML = `
+    ${toolbarPlan(periodoTxt)}
+    <div class="cal">${cols}</div>
+    <div class="plan-resumen">
+      <div class="pres-kpis">
+        <div class="pres-kpi"><div class="pres-num">${totalPlan}</div><div class="pres-lbl">Planificadas</div></div>
+        <div class="pres-kpi"><div class="pres-num" style="color:var(--sage);">${hechas}</div><div class="pres-lbl">Hechas</div></div>
+        <div class="pres-kpi"><div class="pres-num" style="color:var(--whey);">${enCurso}</div><div class="pres-lbl">En curso</div></div>
+        <div class="pres-kpi"><div class="pres-num">~${(totalPlan*litrosXtina).toLocaleString('es-AR')}</div><div class="pres-lbl">Litros previstos</div></div>
+      </div>
+      <div class="pres-var"><div class="pres-var-title">Previsto por variedad</div>${resumenVar}</div>
+    </div>`;
+}
+
+async function pintarPlanMes(body) {
+  const base = new Date();
+  base.setMonth(base.getMonth() + planOffset);
+  const anio = base.getFullYear(), mes = base.getMonth();
+  const nombreMes = base.toLocaleDateString('es-AR', { month:'long', year:'numeric' });
+  const primero = new Date(anio, mes, 1);
+  const dowPrimero = (primero.getDay() + 6) % 7; // 0 = lunes
+  const diasEnMes = new Date(anio, mes+1, 0).getDate();
+  const hoyISO = fechaHoyISO();
+
+  let celdas = "";
+  for (let i = 0; i < dowPrimero; i++) celdas += `<div class="mes-cell fuera"></div>`;
+  for (let dnum = 1; dnum <= diasEnMes; dnum++) {
+    const d = new Date(anio, mes, dnum);
+    const iso = fechaISO(d);
+    const esHoy = iso === hoyISO;
+    const plans = planCache.filter(p => p.fecha === iso);
+    const chips = plans.map(p => {
+      const est = estadoPlanificada(p);
+      const clase = est==='hecha'?'hecha':(est==='curso'?'curso':'plan');
+      return `<div class="mes-tina ${clase}">${nombreVariedad(p.variedadId).slice(0,4)} ×${p.cantidad}</div>`;
+    }).join("");
+    celdas += `<div class="mes-cell ${esHoy?'hoy':''}"><div class="mes-num">${dnum}</div>${chips}</div>`;
+  }
+
+  body.innerHTML = `
+    ${toolbarPlan(nombreMes.charAt(0).toUpperCase()+nombreMes.slice(1))}
+    <div class="mes-grid">
+      <div class="mes-dow">Lun</div><div class="mes-dow">Mar</div><div class="mes-dow">Mié</div><div class="mes-dow">Jue</div><div class="mes-dow">Vie</div><div class="mes-dow">Sáb</div><div class="mes-dow">Dom</div>
+      ${celdas}
+    </div>
+    <div class="hint" style="margin-top:12px;">Vista mensual: panorama general. Para planificar tocá "Semana".</div>`;
+}
+
+window.planModo = function (modo) { planModoActual = modo; planOffset = 0; pintarSubvista(); };
+window.planNav = function (dir) { planOffset += dir; pintarSubvista(); };
+
+// Modal para agregar una tina planificada
+window.abrirModalPlan = function (fecha) {
+  const opciones = CATALOGOS.variedades.map(v => `<option value="${v.id}">${v.nombre}</option>`).join("");
+  const div = document.createElement("div");
+  div.className = "modal-bg";
+  div.id = "modalPlan";
+  div.innerHTML = `
+    <div class="modal">
+      <h3>Planificar tina — ${fecha}</h3>
+      <label>Variedad</label>
+      <select id="mpVariedad">${opciones}</select>
+      <label>Cantidad de tinas</label>
+      <input type="text" inputmode="numeric" id="mpCantidad" value="1">
+      <div class="fila-botones" style="margin-top:14px;">
+        <button class="btn" onclick="window.guardarPlan('${fecha}')">Agregar</button>
+        <button class="btn-secundario" onclick="document.getElementById('modalPlan').remove()">Cancelar</button>
+      </div>
+      <div id="mpMsg"></div>
+    </div>`;
+  document.body.appendChild(div);
+};
+
+window.guardarPlan = async function (fecha) {
+  const variedadId = document.getElementById("mpVariedad").value;
+  const cantidad = num(document.getElementById("mpCantidad").value) || 1;
+  try {
+    await addDoc(collection(db, "planificacion"), {
+      fecha, variedadId, cantidad, cumplidaPor: null, creadoEn: serverTimestamp()
+    });
+    document.getElementById("modalPlan").remove();
+  } catch (e) {
+    document.getElementById("mpMsg").innerHTML = `<div class="msg-error">${e.message}</div>`;
+  }
+};
+
+window.borrarPlan = async function (id) {
+  try { await deleteDoc(doc(db, "planificacion", id)); } catch (e) { alert(e.message); }
 };
 
 function renderHistorial(main) {
