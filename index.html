@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ucalac Gestión</title>
+<!-- Librerías para exportar: SheetJS (Excel) y jsPDF (PDF). Se cargan desde CDN. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -164,13 +168,41 @@
   .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
   .chip{ background:var(--graphite); border:1px solid var(--rind); color:#e0a89b; padding:9px 13px; border-radius:20px; font-size:13px; cursor:pointer; font-weight:500; -webkit-tap-highlight-color:transparent; }
   .chip.sel{ background:var(--rind); color:var(--curd); font-weight:700; }
+
+  /* ---- Historial de recepciones ---- */
+  .hist-kpis{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+  .kpi{ background:var(--graphite-2); border:1px solid var(--line); border-radius:10px; padding:14px 8px; text-align:center; }
+  .kpi-num{ font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; color:var(--whey); line-height:1; }
+  .kpi-num.socio{ color:var(--sage); }
+  .kpi-num.fason{ color:#e0a89b; }
+  .kpi-lbl{ font-size:10px; color:#8b9384; text-transform:uppercase; letter-spacing:0.03em; margin-top:5px; }
+  .mes-selector{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .mes-selector input{ flex:1; }
+  .tambo-group{ margin-bottom:16px; }
+  .tambo-group-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--line); }
+  .tambo-group-name{ font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; color:var(--curd); }
+  .tambo-group-total{ font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--whey); }
+  .entrega-item{ background:var(--graphite-2); border:1px solid var(--line); border-radius:9px; padding:11px 13px; margin-bottom:7px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .entrega-item:active{ border-color:var(--whey); }
+  .entrega-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .entrega-fecha{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--curd-dim); }
+  .entrega-litros{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; color:var(--whey); }
+  .sello{ font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:10px; text-transform:uppercase; letter-spacing:0.03em; font-family:'Barlow Condensed',sans-serif; }
+  .sello.socio{ background:rgba(113,144,106,0.18); color:var(--sage); border:1px solid var(--sage-dim); }
+  .sello.fason{ background:rgba(224,138,122,0.15); color:#e0a89b; border:1px solid var(--rind); }
+  .entrega-sellos{ display:flex; gap:5px; margin-top:5px; }
+  .entrega-detalle{ margin-top:9px; padding-top:9px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--curd-dim); line-height:1.6; }
+  .entrega-detalle b{ color:var(--curd); }
   .hint{ font-size:11.5px; color:#8b9384; margin-top:6px; line-height:1.4; }
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1>Ucalac Gestión</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h1 style="margin:0;">Ucalac Gestión</h1>
+      <button id="btnHistorial" onclick="window.irA('historial')" style="background:var(--graphite-2); border:1px solid var(--whey-dim); color:var(--whey); padding:8px 14px; border-radius:18px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer;">Historial</button>
+    </div>
     <div class="tabs" id="tabs"></div>
   </header>
   <main id="main"><div class="empty">Cargando…</div></main>
@@ -451,6 +483,13 @@ function renderTabs() {
 
 function render() {
   const main = document.getElementById("main");
+  // El rail de producción se oculta en el historial (no es una etapa)
+  const tabsEl = document.getElementById("tabs");
+  if (tabsEl) tabsEl.style.display = (vista === "historial") ? "none" : "";
+  const btnHist = document.getElementById("btnHistorial");
+  if (btnHist) btnHist.style.opacity = (vista === "historial") ? "1" : "0.7";
+
+  if (vista === "historial") return renderHistorial(main);
   if (vista === "recepcion") return renderRecepcion(main);
   if (vista === "elaboracion") {
     if (subVista === "nueva") return renderNuevaElaboracion(main);
@@ -581,6 +620,258 @@ window.crearChofer = async function () {
   } catch (e) {
     document.getElementById("nuevoChoferBox").innerHTML = `<div class="msg-error">${e.message}</div>`;
   }
+};
+
+// ===== HISTORIAL DE RECEPCIONES =====
+
+let histMes = "";              // "YYYY-MM" del mes mostrado
+let histRecibos = [];          // recibos del mes cargados de Firestore
+let entregaAbierta = null;     // "reciboId::idx" de la entrega expandida
+
+function mesActualISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+
+function renderHistorial(main) {
+  if (!histMes) histMes = mesActualISO();
+  main.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <button class="back-link" style="padding:0;" onclick="window.irA('recepcion')">‹ Volver a Recepción</button>
+    </div>
+    <h2 style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; font-size:20px; margin:0 0 12px;">Historial de recepciones</h2>
+
+    <div class="mes-selector">
+      <label style="margin:0;">Mes</label>
+      <input type="month" id="histMesInput" value="${histMes}" max="${mesActualISO()}"
+             onchange="window.cambiarMesHist(this.value)"
+             onclick="if(this.showPicker)this.showPicker()">
+    </div>
+
+    <div id="histContenido"><div class="empty">Cargando…</div></div>
+  `;
+  cargarRecibosMes();
+}
+
+window.cambiarMesHist = function (valor) {
+  histMes = valor;
+  entregaAbierta = null;
+  cargarRecibosMes();
+};
+
+async function cargarRecibosMes() {
+  const cont = document.getElementById("histContenido");
+  if (cont) cont.innerHTML = `<div class="empty">Cargando…</div>`;
+  // El campo `fecha` es "YYYY-MM-DD"; filtramos por rango del mes con comparación de strings.
+  const desde = `${histMes}-01`;
+  const hasta = `${histMes}-31`;
+  try {
+    const q = query(collection(db, "recepciones"),
+      where("fecha", ">=", desde), where("fecha", "<=", hasta));
+    const snap = await getDocs(q);
+    histRecibos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a,b) => (a.fecha||"").localeCompare(b.fecha||""));
+    pintarHistorial();
+  } catch (e) {
+    if (cont) cont.innerHTML = `<div class="msg-error">Error cargando: ${e.message}</div>`;
+  }
+}
+
+// Aplana los recibos en una lista de entregas (una fila por tambo en cada recibo),
+// agregando el contexto del recibo (fecha, empresa, chofer, supervisor).
+function entregasDelMes() {
+  const filas = [];
+  histRecibos.forEach(r => {
+    (r.entregas || []).forEach((ent, idx) => {
+      filas.push({
+        reciboId: r.id, idx,
+        fecha: r.fecha,
+        supervisor: r.supervisor,
+        empresaNombre: r.empresaNombre,
+        choferNombre: r.choferNombre,
+        tamboId: ent.tamboId, tamboNombre: ent.tamboNombre,
+        litrosSocio: ent.litrosSocio || 0,
+        litrosFason: ent.litrosFason || 0,
+        ticket: ent.ticket,
+        silo: ent.silo,
+        analisis: ent.analisis || {}
+      });
+    });
+  });
+  return filas;
+}
+
+function pintarHistorial() {
+  const cont = document.getElementById("histContenido");
+  if (!cont) return;
+  const filas = entregasDelMes();
+
+  if (filas.length === 0) {
+    cont.innerHTML = `<div class="empty">Sin recepciones en este mes.</div>`;
+    return;
+  }
+
+  // KPIs del mes
+  let totalSocio = 0, totalFason = 0;
+  filas.forEach(f => { totalSocio += f.litrosSocio; totalFason += f.litrosFason; });
+  const totalMes = totalSocio + totalFason;
+
+  // Agrupar por tambo
+  const porTambo = {};
+  filas.forEach(f => {
+    if (!porTambo[f.tamboId]) porTambo[f.tamboId] = { nombre: f.tamboNombre, entregas: [], socio: 0, fason: 0 };
+    porTambo[f.tamboId].entregas.push(f);
+    porTambo[f.tamboId].socio += f.litrosSocio;
+    porTambo[f.tamboId].fason += f.litrosFason;
+  });
+
+  const fmt = (n) => n.toLocaleString('es-AR');
+
+  let html = `
+    <div class="hist-kpis">
+      <div class="kpi"><div class="kpi-num">${fmt(totalMes)}</div><div class="kpi-lbl">Total litros</div></div>
+      <div class="kpi"><div class="kpi-num socio">${fmt(totalSocio)}</div><div class="kpi-lbl">Socio</div></div>
+      <div class="kpi"><div class="kpi-num fason">${fmt(totalFason)}</div><div class="kpi-lbl">Fasón</div></div>
+    </div>
+
+    <div class="fila-botones" style="margin-bottom:16px;">
+      <button class="btn-secundario" onclick="window.exportarExcelMes()">📊 Excel (todos los tambos)</button>
+    </div>
+  `;
+
+  Object.keys(porTambo).forEach(tamboId => {
+    const g = porTambo[tamboId];
+    const totalT = g.socio + g.fason;
+    html += `
+      <div class="tambo-group">
+        <div class="tambo-group-head">
+          <span class="tambo-group-name">${g.nombre}</span>
+          <span class="tambo-group-total">${fmt(totalT)} L</span>
+        </div>
+        ${g.entregas.map(f => {
+          const key = `${f.reciboId}::${f.idx}`;
+          const abierta = entregaAbierta === key;
+          const total = f.litrosSocio + f.litrosFason;
+          return `
+            <div class="entrega-item" onclick="window.toggleEntrega('${key}')">
+              <div class="entrega-top">
+                <span class="entrega-fecha">${f.fecha}</span>
+                <span class="entrega-litros">${fmt(total)} L</span>
+              </div>
+              <div class="entrega-sellos">
+                ${f.litrosSocio>0?`<span class="sello socio">Socio ${fmt(f.litrosSocio)}</span>`:''}
+                ${f.litrosFason>0?`<span class="sello fason">Fasón ${fmt(f.litrosFason)}</span>`:''}
+              </div>
+              ${abierta ? `
+                <div class="entrega-detalle">
+                  <div>Supervisor: <b>${f.supervisor || '—'}</b></div>
+                  <div>Transporte: <b>${f.empresaNombre || '—'}</b>${f.choferNombre?` · Chofer: <b>${f.choferNombre}</b>`:''}</div>
+                  <div>Ticket: <b>${f.ticket || '—'}</b> · Silo: <b>${f.silo ? nombreSilo(f.silo) : '—'}</b></div>
+                  <div>Análisis: ${resumenAnalisis(f.analisis)}</div>
+                </div>
+                <div class="fila-botones" style="margin-top:8px;" onclick="event.stopPropagation();">
+                  <button class="btn-chico" onclick="window.exportarPdfTambo('${tamboId}')">📄 PDF de este tambo (mes)</button>
+                </div>
+              ` : ''}
+            </div>`;
+        }).join("")}
+      </div>`;
+  });
+
+  cont.innerHTML = html;
+}
+
+function resumenAnalisis(a) {
+  const partes = [];
+  if (a.ph != null) partes.push(`pH ${a.ph}`);
+  if (a.acidez != null) partes.push(`Acidez ${a.acidez}`);
+  if (a.temperatura != null) partes.push(`${a.temperatura}°C`);
+  if (a.mg != null) partes.push(`MG ${a.mg}`);
+  if (a.proteina != null) partes.push(`Prot ${a.proteina}`);
+  if (a.inhibidores) partes.push(`Inhib: ${a.inhibidores}`);
+  return partes.length ? partes.join(" · ") : "sin datos";
+}
+
+window.toggleEntrega = function (key) {
+  entregaAbierta = (entregaAbierta === key) ? null : key;
+  pintarHistorial();
+};
+
+// ---- Exportar Excel consolidado (todos los tambos del mes) ----
+window.exportarExcelMes = function () {
+  if (typeof XLSX === "undefined") { alert("La librería de Excel todavía no cargó. Reintentá en unos segundos."); return; }
+  const filas = entregasDelMes();
+  if (filas.length === 0) { alert("No hay recepciones este mes."); return; }
+
+  const datos = filas.map(f => ({
+    Fecha: f.fecha,
+    Tambo: f.tamboNombre,
+    "Litros Socio": f.litrosSocio,
+    "Litros Fasón": f.litrosFason,
+    Total: f.litrosSocio + f.litrosFason,
+    Ticket: f.ticket || "",
+    Silo: f.silo ? nombreSilo(f.silo) : "",
+    Supervisor: f.supervisor || "",
+    Transporte: f.empresaNombre || "",
+    Chofer: f.choferNombre || "",
+    pH: f.analisis.ph ?? "",
+    Acidez: f.analisis.acidez ?? "",
+    "Temp °C": f.analisis.temperatura ?? "",
+    "% MG": f.analisis.mg ?? "",
+    "% Prot": f.analisis.proteina ?? "",
+    "% SNG": f.analisis.sng ?? "",
+    "% Agua": f.analisis.agua ?? "",
+    Inhibidores: f.analisis.inhibidores || "",
+    Clostridios: f.analisis.clostridios || ""
+  }));
+
+  // Fila de totales
+  let ts = 0, tf = 0;
+  filas.forEach(f => { ts += f.litrosSocio; tf += f.litrosFason; });
+  datos.push({});
+  datos.push({ Fecha: "TOTALES", "Litros Socio": ts, "Litros Fasón": tf, Total: ts + tf });
+
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Recepciones");
+  XLSX.writeFile(wb, `Recepciones_${histMes}.xlsx`);
+};
+
+// ---- Exportar PDF por tambo (statement del mes) ----
+window.exportarPdfTambo = function (tamboId) {
+  if (!window.jspdf || !window.jspdf.jsPDF) { alert("La librería de PDF todavía no cargó. Reintentá en unos segundos."); return; }
+  const filas = entregasDelMes().filter(f => f.tamboId === tamboId);
+  if (filas.length === 0) return;
+
+  const { jsPDF } = window.jspdf;
+  const docPdf = new jsPDF();
+  const tamboNombre = filas[0].tamboNombre;
+  const fmt = (n) => n.toLocaleString('es-AR');
+
+  docPdf.setFontSize(16);
+  docPdf.text("Ucalac — Recepción de leche", 14, 18);
+  docPdf.setFontSize(11);
+  docPdf.text(`Tambo: ${tamboNombre}`, 14, 27);
+  docPdf.text(`Período: ${histMes}`, 14, 34);
+
+  let ts = 0, tf = 0;
+  const body = filas.map(f => {
+    ts += f.litrosSocio; tf += f.litrosFason;
+    return [f.fecha, fmt(f.litrosSocio), fmt(f.litrosFason), fmt(f.litrosSocio + f.litrosFason), f.ticket || ""];
+  });
+  body.push(["TOTAL", fmt(ts), fmt(tf), fmt(ts + tf), ""]);
+
+  docPdf.autoTable({
+    startY: 42,
+    head: [["Fecha", "Socio (L)", "Fasón (L)", "Total (L)", "Ticket"]],
+    body,
+    theme: "grid",
+    headStyles: { fillColor: [43, 49, 41], textColor: [245, 239, 221] },
+    styles: { fontSize: 10 },
+    columnStyles: { 1:{halign:'right'}, 2:{halign:'right'}, 3:{halign:'right'} }
+  });
+
+  docPdf.save(`Statement_${tamboNombre.replace(/[^\w]/g,'_')}_${histMes}.pdf`);
 };
 
 function renderRecepcion(main) {
