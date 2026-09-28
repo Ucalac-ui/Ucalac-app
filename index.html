@@ -193,6 +193,37 @@
   .entrega-sellos{ display:flex; gap:5px; margin-top:5px; }
   .entrega-detalle{ margin-top:9px; padding-top:9px; border-top:1px dashed var(--line); font-size:12.5px; color:var(--curd-dim); line-height:1.6; }
   .entrega-detalle b{ color:var(--curd); }
+
+  /* ---- Panel / Dashboard (legible de lejos, Smart TV) ---- */
+  .panel-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .panel-title{ font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; font-size:22px; font-weight:700; letter-spacing:0.02em; }
+  .panel-reloj{ font-family:'JetBrains Mono',monospace; font-size:15px; color:#8b9384; }
+  .panel-sec{ font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; font-size:13px; letter-spacing:0.04em; color:#8b9384; margin:6px 0 10px; }
+  .panel-cards{ display:grid; grid-template-columns:1fr; gap:12px; }
+  .pcard{ background:var(--graphite-2); border:1px solid var(--line); border-radius:12px; padding:16px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .pcard:active{ border-color:var(--whey); }
+  .pcard.pausada{ border-color:var(--rind); }
+  .pcard-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; }
+  .pcard-var{ font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; line-height:1; }
+  .pcard-sub{ font-size:13px; color:#8b9384; margin-top:3px; }
+  .pcard-reloj{ font-family:'JetBrains Mono',monospace; font-size:30px; font-weight:700; color:var(--whey); font-variant-numeric:tabular-nums; text-align:right; line-height:1; }
+  .pcard-reloj.glow{ text-shadow:0 0 16px rgba(232,178,60,0.5); }
+  .pcard-reloj.pausada{ color:#e0a89b; text-shadow:none; }
+  .pcard-etapa{ font-size:12px; text-transform:uppercase; letter-spacing:0.03em; color:#8b9384; text-align:right; margin-top:3px; }
+
+  /* KPIs del día grandes */
+  .panel-kpis{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:6px; }
+  .pkpi{ background:var(--graphite-2); border:1px solid var(--line); border-radius:12px; padding:18px 12px; text-align:center; }
+  .pkpi-num{ font-family:'Barlow Condensed',sans-serif; font-size:34px; font-weight:700; color:var(--whey); line-height:1; }
+  .pkpi-lbl{ font-size:12px; color:#8b9384; text-transform:uppercase; letter-spacing:0.03em; margin-top:6px; }
+
+  @media (min-width:700px){
+    .panel-cards{ grid-template-columns:1fr 1fr; }
+    .panel-kpis{ grid-template-columns:repeat(4,1fr); }
+    .pcard-var{ font-size:28px; }
+    .pcard-reloj{ font-size:38px; }
+    .pkpi-num{ font-size:44px; }
+  }
   .hint{ font-size:11.5px; color:#8b9384; margin-top:6px; line-height:1.4; }
 </style>
 </head>
@@ -201,7 +232,10 @@
   <header>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
       <h1 style="margin:0;">Ucalac Gestión</h1>
-      <button id="btnHistorial" onclick="window.irA('historial')" style="background:var(--graphite-2); border:1px solid var(--whey-dim); color:var(--whey); padding:8px 14px; border-radius:18px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer;">Historial</button>
+      <div style="display:flex; gap:8px;">
+        <button id="btnPanel" onclick="window.irA('panel')" style="background:var(--graphite-2); border:1px solid var(--whey-dim); color:var(--whey); padding:8px 14px; border-radius:18px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer;">Panel</button>
+        <button id="btnHistorial" onclick="window.irA('historial')" style="background:var(--graphite-2); border:1px solid var(--whey-dim); color:var(--whey); padding:8px 14px; border-radius:18px; font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; font-size:12px; letter-spacing:0.03em; cursor:pointer;">Historial</button>
+      </div>
     </div>
     <div class="tabs" id="tabs"></div>
   </header>
@@ -446,6 +480,7 @@ function limpiarListeners() {
 
 window.irA = function (v) {
   limpiarListeners();
+  if (typeof limpiarPanelListeners === "function") limpiarPanelListeners();
   vista = v; subVista = null; partidaAbiertaId = null; tinaParaNueva = null;
   cacheElaboraciones = {};
   renderTabs();
@@ -483,12 +518,15 @@ function renderTabs() {
 
 function render() {
   const main = document.getElementById("main");
-  // El rail de producción se oculta en el historial (no es una etapa)
+  // El rail de producción se oculta en historial y panel (no son etapas)
   const tabsEl = document.getElementById("tabs");
-  if (tabsEl) tabsEl.style.display = (vista === "historial") ? "none" : "";
+  if (tabsEl) tabsEl.style.display = (vista === "historial" || vista === "panel") ? "none" : "";
   const btnHist = document.getElementById("btnHistorial");
   if (btnHist) btnHist.style.opacity = (vista === "historial") ? "1" : "0.7";
+  const btnPanel = document.getElementById("btnPanel");
+  if (btnPanel) btnPanel.style.opacity = (vista === "panel") ? "1" : "0.7";
 
+  if (vista === "panel") return renderPanel(main);
   if (vista === "historial") return renderHistorial(main);
   if (vista === "recepcion") return renderRecepcion(main);
   if (vista === "elaboracion") {
@@ -633,6 +671,108 @@ function mesActualISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
 }
+
+// ===== PANEL / DASHBOARD (estado ahora + métricas del día) =====
+
+let panelListeners = [];
+let panelPartidas = {};   // id -> data de partidas activas (para el tick del reloj)
+
+function limpiarPanelListeners() {
+  panelListeners.forEach(u => u());
+  panelListeners = [];
+  panelPartidas = {};
+}
+
+function renderPanel(main) {
+  limpiarPanelListeners();
+  main.innerHTML = `
+    <div class="panel-head">
+      <span class="panel-title">Panel de producción</span>
+      <span class="panel-reloj" id="panelHora"></span>
+    </div>
+    <div class="panel-sec">Partidas activas</div>
+    <div id="panelActivas"><div class="empty">Cargando…</div></div>
+
+    <div class="panel-sec" style="margin-top:22px;">Métricas del día</div>
+    <div class="panel-kpis" id="panelKpis"></div>
+  `;
+
+  // Escuchamos TODAS las elaboraciones de hoy (activas + cerradas hoy) para
+  // poder mostrar las activas y calcular las métricas del día en vivo.
+  const q = query(collection(db, "elaboraciones"), where("fecha", "==", fechaHoyISO()));
+  const unsub = onSnapshot(q, async (snap) => {
+    const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    await pintarPanel(todas);
+  });
+  panelListeners.push(unsub);
+}
+
+async function pintarPanel(todas) {
+  // Activas = las que no terminaron el ciclo (siguen en alguna etapa con la partida "viva").
+  // Consideramos activa toda partida cuyo etapaActualId no sea el final ya cerrado.
+  // Como el motor deja la partida en "envasado" al llegar al final, mostramos
+  // como activas las que están en cualquier etapa (incluida envasado en curso).
+  const activas = todas.filter(e => e.etapaActualId);
+  panelPartidas = {};
+  activas.forEach(e => { panelPartidas[e.id] = e; });
+
+  // --- Partidas activas ---
+  const contA = document.getElementById("panelActivas");
+  if (contA) {
+    if (activas.length === 0) {
+      contA.innerHTML = `<div class="empty">No hay partidas activas ahora mismo.</div>`;
+    } else {
+      // Necesitamos la secuencia de cada variedad para el mini-rail
+      const cards = await Promise.all(activas.map(async e => {
+        const secuencia = await obtenerSecuenciaPartida(e.variedadId);
+        const segs = calcularSegundosTranscurridos(e);
+        const nombreEtapa = (CATALOGOS.etapas[e.etapaActualId] && CATALOGOS.etapas[e.etapaActualId].nombre) || e.etapaActualId;
+        return `
+          <div class="pcard ${e.enCurso?'':'pausada'}" onclick="window.abrirDesdePanel('${e.id}','${e.etapaActualId}')">
+            <div class="pcard-top">
+              <div>
+                <div class="pcard-var">${nombreVariedad(e.variedadId)}</div>
+                <div class="pcard-sub">Tina ${e.tinaFisica} · N°${e.nTinaVariedad}</div>
+              </div>
+              <div>
+                <div class="pcard-reloj ${e.enCurso?'glow':'pausada'}" id="reloj_${e.id}">${formatearHMS(segs)}</div>
+                <div class="pcard-etapa">${nombreEtapa}${e.enCurso?'':' · pausado'}</div>
+              </div>
+            </div>
+            ${renderMiniRail(secuencia, e.etapaActualId)}
+          </div>`;
+      }));
+      contA.innerHTML = `<div class="panel-cards">${cards.join("")}</div>`;
+    }
+  }
+
+  // --- Métricas del día ---
+  const contK = document.getElementById("panelKpis");
+  if (contK) {
+    const tinasActivas = activas.filter(e => e.etapaActualId === "elaboracion").length;
+    const partidasHoy = todas.length;
+    let litrosHoy = 0;
+    todas.forEach(e => { litrosHoy += num(e.litros) || 0; });
+    const enCurso = activas.filter(e => e.enCurso).length;
+
+    const fmt = (n) => n.toLocaleString('es-AR');
+    contK.innerHTML = `
+      <div class="pkpi"><div class="pkpi-num">${tinasActivas}</div><div class="pkpi-lbl">Tinas en elaboración</div></div>
+      <div class="pkpi"><div class="pkpi-num">${partidasHoy}</div><div class="pkpi-lbl">Partidas hoy</div></div>
+      <div class="pkpi"><div class="pkpi-num">${fmt(litrosHoy)}</div><div class="pkpi-lbl">Litros del día</div></div>
+      <div class="pkpi"><div class="pkpi-num">${enCurso}</div><div class="pkpi-lbl">Relojes corriendo</div></div>`;
+  }
+}
+
+// Ir al detalle de una partida desde el panel (setea la pestaña correcta)
+window.abrirDesdePanel = function (id, etapaId) {
+  limpiarPanelListeners();
+  vista = (etapaId === "elaboracion") ? "elaboracion" : etapaId;
+  subVista = "detalle";
+  partidaAbiertaId = id;
+  renderTabs();
+  render();
+};
 
 function renderHistorial(main) {
   if (!histMes) histMes = mesActualISO();
@@ -1508,6 +1648,18 @@ setInterval(() => {
     if (!el) return;
     el.textContent = formatearHMS(calcularSegundosTranscurridos(cacheElaboraciones[id]));
   });
+  // Relojes del panel (partidas activas)
+  Object.keys(panelPartidas).forEach(id => {
+    const el = document.getElementById(`reloj_${id}`);
+    if (!el) return;
+    el.textContent = formatearHMS(calcularSegundosTranscurridos(panelPartidas[id]));
+  });
+  // Hora actual en el panel
+  const horaEl = document.getElementById("panelHora");
+  if (horaEl) {
+    const d = new Date();
+    horaEl.textContent = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  }
 }, 1000);
 
 // ===== Arranque =====
