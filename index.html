@@ -697,9 +697,12 @@ function renderPanel(main) {
     <div class="panel-kpis" id="panelKpis"></div>
   `;
 
-  // Escuchamos TODAS las elaboraciones de hoy (activas + cerradas hoy) para
-  // poder mostrar las activas y calcular las métricas del día en vivo.
-  const q = query(collection(db, "elaboraciones"), where("fecha", "==", fechaHoyISO()));
+  // Partidas activas: TODAS las que están en curso ahora mismo, sin importar
+  // qué día arrancaron (una elaboración que empezó ayer y sigue hoy debe verse).
+  // Se consideran activas las que no cerraron el ciclo — como el motor deja la
+  // partida "viva" mientras tiene etapaActualId, traemos todas y filtramos las
+  // que siguen su recorrido. Para las métricas del día usamos la fecha aparte.
+  const q = query(collection(db, "elaboraciones"));
   const unsub = onSnapshot(q, async (snap) => {
     const todas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     await pintarPanel(todas);
@@ -708,10 +711,8 @@ function renderPanel(main) {
 }
 
 async function pintarPanel(todas) {
-  // Activas = las que no terminaron el ciclo (siguen en alguna etapa con la partida "viva").
-  // Consideramos activa toda partida cuyo etapaActualId no sea el final ya cerrado.
-  // Como el motor deja la partida en "envasado" al llegar al final, mostramos
-  // como activas las que están en cualquier etapa (incluida envasado en curso).
+  const hoy = fechaHoyISO();
+  // Activas = partidas en curso ahora (cualquier día de inicio).
   const activas = todas.filter(e => e.etapaActualId);
   panelPartidas = {};
   activas.forEach(e => { panelPartidas[e.id] = e; });
@@ -746,13 +747,14 @@ async function pintarPanel(todas) {
     }
   }
 
-  // --- Métricas del día ---
+  // --- Métricas del día (solo las partidas cuya fecha es hoy) ---
   const contK = document.getElementById("panelKpis");
   if (contK) {
+    const deHoy = todas.filter(e => e.fecha === hoy);
     const tinasActivas = activas.filter(e => e.etapaActualId === "elaboracion").length;
-    const partidasHoy = todas.length;
+    const partidasHoy = deHoy.length;
     let litrosHoy = 0;
-    todas.forEach(e => { litrosHoy += num(e.litros) || 0; });
+    deHoy.forEach(e => { litrosHoy += num(e.litros) || 0; });
     const enCurso = activas.filter(e => e.enCurso).length;
 
     const fmt = (n) => n.toLocaleString('es-AR');
