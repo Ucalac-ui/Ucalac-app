@@ -627,6 +627,7 @@ window.crearChofer = async function () {
 let histMes = "";              // "YYYY-MM" del mes mostrado
 let histRecibos = [];          // recibos del mes cargados de Firestore
 let entregaAbierta = null;     // "reciboId::idx" de la entrega expandida
+let tambosExpandidos = {};     // tamboId -> true si está desplegado
 
 function mesActualISO() {
   const d = new Date();
@@ -656,6 +657,7 @@ function renderHistorial(main) {
 window.cambiarMesHist = function (valor) {
   histMes = valor;
   entregaAbierta = null;
+  tambosExpandidos = {};
   cargarRecibosMes();
 };
 
@@ -742,15 +744,17 @@ function pintarHistorial() {
   Object.keys(porTambo).forEach(tamboId => {
     const g = porTambo[tamboId];
     const totalT = g.socio + g.fason;
+    const abierto = !!tambosExpandidos[tamboId];
+    const nEnt = g.entregas.length;
     html += `
       <div class="tambo-group">
-        <div class="tambo-group-head">
-          <span class="tambo-group-name">${g.nombre}</span>
-          <span class="tambo-group-total">${fmt(totalT)} L</span>
+        <div class="tambo-group-head" style="cursor:pointer; -webkit-tap-highlight-color:transparent;" onclick="window.toggleTambo('${tamboId}')">
+          <span class="tambo-group-name">${abierto?'▾':'▸'} ${g.nombre}</span>
+          <span class="tambo-group-total">${fmt(totalT)} L · ${nEnt} ${nEnt===1?'entrega':'entregas'}</span>
         </div>
-        ${g.entregas.map(f => {
+        ${abierto ? g.entregas.map(f => {
           const key = `${f.reciboId}::${f.idx}`;
-          const abierta = entregaAbierta === key;
+          const abiertaEnt = entregaAbierta === key;
           const total = f.litrosSocio + f.litrosFason;
           return `
             <div class="entrega-item" onclick="window.toggleEntrega('${key}')">
@@ -762,19 +766,19 @@ function pintarHistorial() {
                 ${f.litrosSocio>0?`<span class="sello socio">Socio ${fmt(f.litrosSocio)}</span>`:''}
                 ${f.litrosFason>0?`<span class="sello fason">Fasón ${fmt(f.litrosFason)}</span>`:''}
               </div>
-              ${abierta ? `
+              ${abiertaEnt ? `
                 <div class="entrega-detalle">
                   <div>Supervisor: <b>${f.supervisor || '—'}</b></div>
                   <div>Transporte: <b>${f.empresaNombre || '—'}</b>${f.choferNombre?` · Chofer: <b>${f.choferNombre}</b>`:''}</div>
                   <div>Ticket: <b>${f.ticket || '—'}</b> · Silo: <b>${f.silo ? nombreSilo(f.silo) : '—'}</b></div>
                   <div>Análisis: ${resumenAnalisis(f.analisis)}</div>
                 </div>
-                <div class="fila-botones" style="margin-top:8px;" onclick="event.stopPropagation();">
-                  <button class="btn-chico" onclick="window.exportarPdfTambo('${tamboId}')">📄 PDF de este tambo (mes)</button>
-                </div>
               ` : ''}
             </div>`;
-        }).join("")}
+        }).join("") : ''}
+        ${abierto ? `<div class="fila-botones" style="margin-top:8px;">
+          <button class="btn-chico" onclick="window.exportarPdfTambo('${tamboId}')">📄 PDF statement (mes)</button>
+        </div>` : ''}
       </div>`;
   });
 
@@ -791,6 +795,12 @@ function resumenAnalisis(a) {
   if (a.inhibidores) partes.push(`Inhib: ${a.inhibidores}`);
   return partes.length ? partes.join(" · ") : "sin datos";
 }
+
+window.toggleTambo = function (tamboId) {
+  tambosExpandidos[tamboId] = !tambosExpandidos[tamboId];
+  if (!tambosExpandidos[tamboId]) entregaAbierta = null; // al cerrar el tambo, cierro entregas
+  pintarHistorial();
+};
 
 window.toggleEntrega = function (key) {
   entregaAbierta = (entregaAbierta === key) ? null : key;
