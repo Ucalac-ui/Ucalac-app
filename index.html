@@ -41,11 +41,12 @@
   .rail .node.active .label{ color:var(--whey); font-weight:600; }
 
   /* versión chica — recorrido de UNA partida, discreta para no competir con el reloj */
-  .rail-mini{ margin-bottom:4px; opacity:0.9; }
+  .rail-mini{ margin-top:14px; margin-bottom:0; opacity:0.9; }
   .rail-mini .rail-line{ top:9px; left:9px; right:9px; height:1px; background:rgba(74,81,71,0.6); }
   .rail-mini .rail-line-fill{ top:9px; left:9px; height:1px; background:var(--whey-dim); }
   .rail-mini .dot{ width:16px; height:16px; font-size:0; border-width:1px; }
   .rail-mini .node{ gap:3px; }
+  .rail-mini .node.done .dot{ background:rgba(79,106,74,0.5); border-color:rgba(113,144,106,0.5); }
   .rail-mini .node.active .dot{ animation:none; box-shadow:0 0 6px 1px rgba(232,178,60,0.45); }
   .rail-mini .node .label{ font-size:8px; margin-top:2px; color:#7a8074; }
   .rail-mini .node.active .label{ color:var(--whey-dim); }
