@@ -40,12 +40,15 @@
   .rail .node .label{ font-family:'Barlow Condensed',sans-serif; font-size:9.5px; text-transform:uppercase; letter-spacing:0.03em; color:var(--curd-dim); text-align:center; }
   .rail .node.active .label{ color:var(--whey); font-weight:600; }
 
-  /* versión chica — recorrido de UNA partida específica, dentro del detalle */
-  .rail-mini{ margin-bottom:16px; }
-  .rail-mini .rail-line{ top:12px; left:12px; right:12px; }
-  .rail-mini .rail-line-fill{ top:12px; left:12px; }
-  .rail-mini .dot{ width:22px; height:22px; font-size:0; }
-  .rail-mini .node .label{ font-size:8.5px; margin-top:2px; }
+  /* versión chica — recorrido de UNA partida, discreta para no competir con el reloj */
+  .rail-mini{ margin-bottom:4px; opacity:0.9; }
+  .rail-mini .rail-line{ top:9px; left:9px; right:9px; height:1px; background:rgba(74,81,71,0.6); }
+  .rail-mini .rail-line-fill{ top:9px; left:9px; height:1px; background:var(--whey-dim); }
+  .rail-mini .dot{ width:16px; height:16px; font-size:0; border-width:1px; }
+  .rail-mini .node{ gap:3px; }
+  .rail-mini .node.active .dot{ animation:none; box-shadow:0 0 6px 1px rgba(232,178,60,0.45); }
+  .rail-mini .node .label{ font-size:8px; margin-top:2px; color:#7a8074; }
+  .rail-mini .node.active .label{ color:var(--whey-dim); }
   main{ padding:16px; }
 
   .back-link{ background:none; border:none; color:var(--whey-dim); font-size:13px; display:flex; align-items:center; gap:4px; padding:0 0 14px; cursor:pointer; font-family:'Inter',sans-serif; font-weight:500; -webkit-tap-highlight-color:transparent; }
@@ -797,6 +800,7 @@ function limpiarPanelListeners() {
 function renderPanel(main) {
   limpiarPanelListeners();
   main.innerHTML = `
+    <button class="back-link" style="padding:0 0 12px;" onclick="window.irA('recepcion')">‹ Volver a producción</button>
     <div class="panel-head">
       <span class="panel-title">Panel de producción</span>
       <span class="panel-reloj" id="panelHora"></span>
